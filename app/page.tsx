@@ -27,7 +27,10 @@ export default function Home() {
 
   const next = () => setStep((s) => Math.min(s + 1, 4));
   const prev = () => setStep((s) => Math.max(s - 1, 1));
-  const goTo = (n: number) => { if (n < step) setStep(n); };
+  // Demo: libre acceso a cualquier paso. Normal: solo pasos ya visitados.
+  const goTo = (n: number) => {
+    if (isDemo || n <= step) setStep(n);
+  };
 
   const loadDemo = () => {
     setData(DEMO_PODER);
@@ -122,34 +125,24 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Demo banner */}
+      {/* Demo banner — limpio, navegación vía step dots */}
       {isDemo && (
         <div style={{
-          background: 'linear-gradient(90deg, rgba(201,168,76,0.18) 0%, rgba(201,168,76,0.08) 100%)',
-          borderBottom: '1px solid rgba(201,168,76,0.35)',
-          padding: '10px 24px',
+          background: 'linear-gradient(90deg, rgba(201,168,76,0.14) 0%, rgba(201,168,76,0.05) 100%)',
+          borderBottom: '1px solid rgba(201,168,76,0.3)',
+          padding: '8px 24px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
+          gap: '10px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '16px' }}>👁</span>
-            <div>
-              <span style={{ fontSize: '13px', color: 'var(--pg-gold)', fontWeight: 'bold' }}>
-                Modo Demo
-              </span>
-              <span style={{ fontSize: '12px', color: 'rgba(245,240,232,0.6)', marginLeft: '10px' }}>
-                Caso real: Marjorie Braatz → NITTA 404, Fideicomiso 751699 Banorte
-              </span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => setStep(1)} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '3px', background: 'transparent', color: 'rgba(245,240,232,0.6)', cursor: 'pointer' }}>Paso 1</button>
-            <button onClick={() => setStep(2)} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '3px', background: 'transparent', color: 'rgba(245,240,232,0.6)', cursor: 'pointer' }}>Paso 2</button>
-            <button onClick={() => setStep(3)} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '3px', background: 'transparent', color: 'rgba(245,240,232,0.6)', cursor: 'pointer' }}>Paso 3</button>
-            <button onClick={() => setStep(4)} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '3px', background: 'rgba(201,168,76,0.15)', color: 'var(--pg-gold)', cursor: 'pointer', fontWeight: 'bold' }}>Preview ▶</button>
-          </div>
+          <span style={{ fontSize: '14px' }}>👁</span>
+          <span style={{ fontSize: '13px', color: 'var(--pg-gold)', fontWeight: 'bold' }}>Modo Demo</span>
+          <span style={{ fontSize: '12px', color: 'rgba(245,240,232,0.55)' }}>
+            Marjorie Braatz → NITTA 404 · Fideicomiso 751699 Banorte
+          </span>
+          <span style={{ fontSize: '11px', color: 'rgba(245,240,232,0.35)', marginLeft: 'auto' }}>
+            Haz clic en cualquier paso para navegar libremente
+          </span>
         </div>
       )}
 
@@ -166,10 +159,11 @@ export default function Home() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                   <button
                     onClick={() => goTo(s.num)}
-                    className={`pg-step-dot ${step === s.num ? 'active' : step > s.num ? 'done' : 'pending'}`}
-                    style={{ cursor: step > s.num ? 'pointer' : 'default' }}
+                    className={`pg-step-dot ${step === s.num ? 'active' : (isDemo || step > s.num) ? 'done' : 'pending'}`}
+                    style={{ cursor: (isDemo || step > s.num) ? 'pointer' : 'default' }}
+                    title={isDemo ? `Ir al Paso ${s.num}: ${s.label}` : undefined}
                   >
-                    {step > s.num ? '✓' : s.num}
+                    {(isDemo || step > s.num) && step !== s.num ? '✓' : s.num}
                   </button>
                   <span style={{
                     fontSize: '10px',
