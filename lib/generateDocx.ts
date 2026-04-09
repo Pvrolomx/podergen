@@ -16,6 +16,7 @@ import {
 } from 'docx';
 import type { PoderData, Facultades } from '@/types/poder';
 import { buildConcordancia, buildApoderadosTexto, buildCertificacionTextos, buildPoderdantesStr, getGeneroGrupo, esMultiple } from '@/lib/concordancia';
+import { FR } from '@/lib/traduccionesFR';
 import {
   ESTADO_CIVIL_LABELS,
   TIPO_PODER_LABELS,
@@ -263,6 +264,10 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     return txt + '.';
   };
 
+  const isFR = data.idiomaDoc === 'fr';
+  // col2: helper para seleccionar EN o FR en la columna derecha
+  // se llama como col2(textEN, textFR)
+  const col2 = (en: string, fr: string) => isFR ? fr : en;
   const esFideicomiso = data.inmueble.modo === 'fideicomiso';
   const predialES = data.inmueble.cuentaPredial ? ` A dicho INMUEBLE le corresponde la cuenta predial ${data.inmueble.cuentaPredial}.` : '';
   const predialEN = data.inmueble.cuentaPredial ? ` To said PROPERTY corresponds Property Account No. ${data.inmueble.cuentaPredial}.` : '';
@@ -286,11 +291,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       { center: false }
     ),
     spacerRow(),
-    biRow(
-      data.modoProemio === 'suscrito' ? 'HACER CONSTAR:' : 'HACER CONSTAR:',
-      data.modoProemio === 'suscrito' ? 'RECORD:' : 'RECORD:',
-      { bold: true, center: true }
-    ),
+    biRow('HACER CONSTAR:', col2('RECORD:', FR.hacerConstar), { bold: true, center: true }),
     spacerRow(),
     biRow(
       data.modoProemio === 'suscrito'
@@ -303,11 +304,11 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     spacerRow(),
 
     // ===== CLÁUSULAS =====
-    biRow('C L Á U S U L A S:', 'C L A U S E S:', { bold: true, center: true }),
+    biRow('C L Á U S U L A S:', col2('C L A U S E S:', FR.clausulas), { bold: true, center: true }),
     spacerRow(),
 
     // PRIMERA
-    headerRow('PRIMERA.- OTORGAMIENTO DE PODER', 'FIRST.- GRANTING OF POWERS OF ATTORNEY'),
+    headerRow('PRIMERA.- OTORGAMIENTO DE PODER', col2('FIRST.- GRANTING OF POWERS OF ATTORNEY', FR.primeraHeader)),
     biRow(
       `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "otorgamos" : "otorgo") : (multiple ? "otorgan" : "otorga")} ${tipoES}, en favor de ${apoderadosStr}, para que lo ejerciten, conjuntamente o por separado, en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; los apoderados podrán firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto se le otorga y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.`,
       `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "hereby grant" : "hereby grants") : (multiple ? "grant" : "grants")} ${tipoEN} in favor of ${apoderadosStr}, to be exercised, jointly or separately, in terms authorized by paragraphs second and third of article 2554 of the Federal Civil Code, and their equivalent in the further entities of the Republic and the Protocol On Uniform Legal Provisions. For powers of attorney approved with resolution XLVIII of the Seventh International American Conference of the PanAmerican Union, signed on May 7th, 1953, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the Mexican United States on December 22nd, 1951, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the United Mexican States on June 12th, 1953. Having deposited the instrument of ratification with the Secretary General of the Organization of American States on June 24th, 1953; and published in the Official Journal of the Federation on December 3rd, 1953. In accordance with the Interamerican Convention on the Legal Regime of Powers of Attorney to be used abroad, issued by the Organization of American States on January 30th, 1975 and adopted by Mexico according to publication made in the Official Journal of the Federation on February 6th, 1987; and in accordance with the Federal Civil Code and all articles relating to the various Civil Codes of the Federal Entities of the United Mexican States; The proxies may sign the public or private documentation that may be necessary to exercise this power, with the amplest capacities to achieve the purpose of the Power in this act granted and may be exercised before Private Persons, or Administrative, Judicial Authorities, whose jurisdiction be Federal, State, or Municipal.`,
@@ -315,7 +316,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     spacerRow(),
 
     // SEGUNDA
-    headerRow('SEGUNDA.- LIMITACIÓN', 'SECOND.- LIMITATION'),
+    headerRow('SEGUNDA.- LIMITACIÓN', col2('SECOND.- LIMITATION', FR.segundaHeader)),
     biRow(
       esFideicomiso
         ? `El presente poder se otorga de forma limitada sobre el siguiente bien inmueble, contenido en el Fideicomiso identificado administrativamente con el número ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`
@@ -325,23 +326,23 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
         : 'This power is granted in a limited manner over the following property owned by the grantor:',
     ),
     spacerRow(),
-    biRow('INMUEBLE:', 'PROPERTY:', { bold: true, center: true, shade: true }),
+    biRow('INMUEBLE:', col2('PROPERTY:', FR.inmuebleLabel), { bold: true, center: true, shade: true }),
     biRow(
       inmuebleDesc + predialES + (escrituraES ? ' ' + escrituraES : '') + ' EN ADELANTE EL INMUEBLE.',
-      inmuebleDescEN + predialEN + (escrituraEN ? ' ' + escrituraEN : '') + ' HEREINAFTER THE PROPERTY.',
+      col2(inmuebleDescEN + predialEN + (escrituraEN ? ' ' + escrituraEN : '') + ' HEREINAFTER THE PROPERTY.', inmuebleDesc + (data.inmueble.cuentaPredial ? ` ${FR.predial(data.inmueble.cuentaPredial)}` : '') + ' ' + FR.hereinafter),
     ),
     spacerRow(),
 
     // TERCERA
-    headerRow('TERCERA.- LIMITACIÓN AL INMUEBLE', 'THIRD.- LIMITATION TO THE PROPERTY'),
+    headerRow('TERCERA.- LIMITACIÓN AL INMUEBLE', col2('THIRD.- LIMITATION TO THE PROPERTY', FR.terceraHeader)),
     biRow(
       'El presente poder será amplio y general en cuanto a sus facultades y limitado en cuanto a su objeto por lo que sólo podrá ser ejercido respecto al INMUEBLE antes referido.',
-      'This power will be wide and general in terms of their faculties and limited in terms of its object so that it can only be exercised regarding the PROPERTY above mentioned.',
+      col2('This power will be wide and general in terms of their faculties and limited in terms of its object so that it can only be exercised regarding the PROPERTY above mentioned.', FR.tercera),
     ),
     spacerRow(),
 
     // CUARTA
-    headerRow('CUARTA.- FACULTADES DEL APODERADO', 'FOURTH.- FACULTIES OF THE PROXY'),
+    headerRow('CUARTA.- FACULTADES DEL APODERADO', col2('FOURTH.- FACULTIES OF THE PROXY', FR.cuartaHeader)),
     biRow(
       `El poder otorgado se confiere ÚNICA Y EXCLUSIVAMENTE, para que los apoderados, conjunta o separadamente, en favor del poderdante: ${facultadesText.es}; respecto ${esFideicomiso ? 'de los derechos fideicomisarios en el fideicomiso mencionado en la CLÁUSULA SEGUNDA que tiene afectado el INMUEBLE' : 'del INMUEBLE mencionado en la CLÁUSULA SEGUNDA'}.`,
       `The power of attorney hereby granted is ONLY AND EXCLUSIVELY for the representatives, jointly or separately, in favor of the grantor: ${facultadesText.en}; regarding ${esFideicomiso ? 'the trust rights of the trust mentioned in CLAUSE SECOND, that the PROPERTY is affected by' : 'the PROPERTY mentioned in CLAUSE SECOND'}.`,
@@ -349,20 +350,20 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     spacerRow(),
 
     // RÉGIMEN LEGAL
-    headerRow('RÉGIMEN LEGAL DEL MANDATO — CÓDIGO CIVIL FEDERAL', 'LEGAL REGIME OF THE MANDATE — FEDERAL CIVIL CODE'),
+    headerRow('RÉGIMEN LEGAL DEL MANDATO — CÓDIGO CIVIL FEDERAL', col2('LEGAL REGIME OF THE MANDATE — FEDERAL CIVIL CODE', FR.regimenHeader)),
     biRow(
       '"Artículo 2,554.- En todos los poderes generales para pleitos y cobranzas, bastará que se diga que se otorga con todas las facultades generales y las especiales que requieran cláusula especial conforme a la ley, para que se entiendan conferidos sin limitación alguna. En los poderes generales para administrar bienes, bastará expresar que se dan con ese carácter, para que el apoderado tenga toda clase de facultades administrativas. En los poderes generales, para ejercer actos de dominio, bastará que se den con ese carácter para que el apoderado tenga todas las facultades de dueño, tanto en lo relativo a los bienes, como para hacer toda clase de gestiones a fin de defenderlos. Cuando se quisieren limitar, en los tres casos antes mencionados, las facultades del apoderado, se consignarán las limitaciones, o los poderes serán especiales. Los notarios insertarán este artículo en los testimonios de los poderes que otorguen."',
-      '"Article 2554, Federal Civil Code.- In all general powers of attorney for lawsuits and collections, it shall suffice to state that all the general faculties are granted and the special clause pursuant to the law, in order for the power of attorney to be understood to be conferred without any limitation. In general powers of attorney to administer property, it shall suffice to state that the same are granted for administrative faculties. In the general powers of attorney to carry out acts of ownership, it will be enough having the character so that the attorney to have all the powers of the owner, both in relation to the property, as to make all the negotiation in order to defend them. When desired to limit, in the three cases before referred to the attorneys, the limitations will be made or the powers shall be special in nature. Notaries shall insert this article in the testimonies of the powers that are granted."',
+      'col2(`"Article 2554, Federal Civil Code.- In all general powers of attorney for lawsuits and collections, it shall suffice to state that all the general faculties are granted and the special clause pursuant to the law, in order for the power of attorney to be understood to be conferred without any limitation. In general powers of attorney to administer property, it shall suffice to state that the same are granted for administrative faculties. In the general powers of attorney to carry out acts of ownership, it will be enough having the character so that the attorney to have all the powers of the owner, both in relation to the property, as to make all the negotiation in order to defend them. When desired to limit, in the three cases before referred to the attorneys, the limitations will be made or the powers shall be special in nature. Notaries shall insert this article in the testimonies of the powers that are granted."`, FR.art2554)',
     ),
     spacerRow(),
     biRow(
       '"Artículo 2,555.- El mandato debe otorgarse en escritura pública o en carta poder firmada ante dos testigos y ratificadas las firmas del otorgante y testigos ante notario, ante los jueces o autoridades administrativas correspondientes: I. Cuando sea general..."',
-      '"Article 2,555.- The mandate must be granted in a public deed or in a power of attorney signed before two witnesses and the signatures of the grantor and witnesses ratified before a notary, before the corresponding judges or administrative authorities: I. When general…"',
+      'col2(`"Article 2,555.- The mandate must be granted in a public deed or in a power of attorney signed before two witnesses and the signatures of the grantor and witnesses ratified before a notary, before the corresponding judges or administrative authorities: I. When general…"`, FR.art2555)',
     ),
     spacerRow(),
     biRow(
       '"Artículo 2,596.- El mandante puede revocar el mandato cuando y como le parezca; menos en aquellos casos en que su otorgamiento se hubiere estipulado como una condición en un contrato bilateral, o como un medio para cumplir una obligación contraída. En estos casos tampoco puede el mandatario renunciar el poder. La parte que revoque o renuncie el mandato en tiempo inoportuno, debe indemnizar a la otra de los daños y perjuicios que le cause."',
-      '"Article 2,596.- The principal may revoke the mandate when and as he sees fit; except in those cases in which its granting has been stipulated as a condition in a bilateral contract, or as a means to fulfill a contracted obligation. In these cases, the agent cannot renounce power either. The party that revokes or renounces the mandate inopportune time, must indemnify the other for the damages caused."',
+      'col2(`"Article 2,596.- The principal may revoke the mandate when and as he sees fit; except in those cases in which its granting has been stipulated as a condition in a bilateral contract, or as a means to fulfill a contracted obligation. In these cases, the agent cannot renounce power either. The party that revokes or renounces the mandate inopportune time, must indemnify the other for the damages caused."`, FR.art2596)',
     ),
     spacerRow(),
 
@@ -400,8 +401,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
 
     // CERTIFICACIÓN — condicional según modoProemio
     ...(data.modoProemio === 'notarial' ? [
-      headerRow('CERTIFICACIÓN NOTARIAL', 'NOTARIAL CERTIFICATION'),
-      biRow('Yo, el Notario Certifico y doy fe:', 'I, the Notary, Certify and attest:', { bold: true }),
+      headerRow('CERTIFICACIÓN NOTARIAL', col2('NOTARIAL CERTIFICATION', FR.certHeader)),
+      biRow('Yo, el Notario Certifico y doy fe:', col2('I, the Notary, Certify and attest:', FR.certYo), { bold: true }),
       spacerRow(),
       biRow(ct.puntoI_ES, ct.puntoI_EN),
       biRow(ct.puntoII_ES, ct.puntoII_EN),
@@ -411,17 +412,17 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       biRow(ct.leido_ES, ct.leido_EN),
     ] : [
       // Modo suscrito: certificación simplificada
-      headerRow('FIRMA Y RATIFICACIÓN', 'SIGNATURE AND RATIFICATION'),
+      headerRow('FIRMA Y RATIFICACIÓN', col2('SIGNATURE AND RATIFICATION', FR.firmaRatificacion)),
       biRow(
         `En fe de lo anterior, ${c.laEl} ${c.otorgante} firma el presente instrumento.`,
-        `In witness whereof, the grantor signs this instrument.`,
+        col2(`In witness whereof, the grantor signs this instrument.`, FR.enFeDeLo(c.laEl)),
       ),
     ]),
     spacerRow(),
     spacerRow(),
 
     // FIRMA SECTION
-    headerRow('FIRMAS — SIGNATURES', 'FIRMAS — SIGNATURES'),
+    headerRow('FIRMAS — SIGNATURES', col2('FIRMAS — SIGNATURES', 'SIGNATURES — FIRMAS')),
   ];
 
   // Signature block rows
@@ -442,7 +443,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
               alignment: AlignmentType.CENTER,
               children: [
                 new TextRun({
-                  text: `Lugar y Fecha / Place and Date:`,
+                  text: `Lugar y Fecha / ${col2('Place and Date', 'Lieu et Date')}:`,
                   bold: true,
                   size: 18,
                   font: 'Times New Roman',
@@ -475,7 +476,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
               alignment: AlignmentType.CENTER,
               children: [
                 new TextRun({
-                  text: 'Firma y Sello del Notario Público / Notary Seal & Signature:',
+                  text: `Firma y Sello del Notario Público / ${col2('Notary Seal & Signature', 'Sceau et Signature Notariale')}:`,
                   bold: true,
                   size: 18,
                   font: 'Times New Roman',
@@ -566,7 +567,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
               alignment: AlignmentType.CENTER,
               children: [
                 new TextRun({
-                  text: `${c.elLa.charAt(0).toUpperCase() + c.elLa.slice(1)} Poderdante / Grantor`,
+                  text: multiple ? `Los Poderdantes / ${col2('The Grantors', FR.firmaLabelPlur)}` : `${c.elLa.charAt(0).toUpperCase() + c.elLa.slice(1)} Poderdante / ${col2('Grantor', c.elLa === 'la' ? FR.firmaLabel_F : FR.firmaLabel_M)}`,
                   size: 16,
                   font: 'Times New Roman',
                 }),

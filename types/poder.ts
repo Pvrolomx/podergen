@@ -4,6 +4,7 @@ export type TipoPoder = 'pleitos_cobranzas' | 'administracion' | 'dominio';
 export type ModoTitulo = 'fideicomiso' | 'escritura';
 export type ModoProemio = 'notarial' | 'suscrito';
 export type RegimenEstado = 'nayarit' | 'jalisco';
+export type IdiomaDoc = 'en' | 'fr';
 
 export interface Poderdante {
   nombre: string;
@@ -77,6 +78,7 @@ export interface PoderData {
   facultades: Facultades;
   modoProemio: ModoProemio;  // 'notarial' | 'suscrito'
   regimenEstado: RegimenEstado; // 'nayarit' | 'jalisco'
+  idiomaDoc: IdiomaDoc;         // 'en' | 'fr'
   lugar?: string;
   fecha?: string;
 }
@@ -124,6 +126,7 @@ export const DEFAULT_PODER: PoderData = {
   tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
   modoProemio: 'notarial',
   regimenEstado: 'nayarit',
+  idiomaDoc: 'en',
   poderdantes: [],
   facultades: {
     adquirirDerechos: true,

@@ -49,6 +49,7 @@ export const DEMO_PODER: PoderData = {
   tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
   modoProemio: 'notarial' as const,
   regimenEstado: 'nayarit' as const,
+  idiomaDoc: 'en' as const,
   poderdantes: [],
   facultades: {
     adquirirDerechos: true,
