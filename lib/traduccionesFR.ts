@@ -47,6 +47,7 @@ export const FR = {
     firmarDocumentos: "Signer des documents publics ou privés devant toute personne physique, morale, autorité ou notaire",
     escrow: "Souscrire les formulaires nécessaires auprès de la société d'entiercement correspondante",
     isr: "Demander le calcul, l'exonération et la déduction en vertu de la Loi de l'Impôt sur le Revenu",
+    sustitucionFiduciaria: "Demander et gérer la substitution du fiduciaire, ainsi que le transfert du fonds fiduciaire à une autre institution fiduciaire que le mandataire jugera appropriée",
   } as Record<string, string>,
 
   // ── RÉGIMEN LEGAL CCF ──────────────────────────────────────────────

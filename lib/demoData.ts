@@ -64,6 +64,7 @@ export const DEMO_PODER: PoderData = {
     firmarDocumentos: true,
     escrow: true,
     isr: true,
+    sustitucionFiduciaria: false,
   },
   lugar: '',
   fecha: '',
