@@ -10,13 +10,36 @@ interface Props {
   onPrev: () => void;
 }
 
-// Common Banorte trusts
-const BANCOS_COMUNES = [
-  'BANCO MERCANTIL DEL NORTE, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO BANORTE, DIVISIÓN FIDUCIARIA',
-  'BBVA BANCOMER, S.A., INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO BBVA BANCOMER, DIVISIÓN FIDUCIARIA',
-  'BANCO SANTANDER (MÉXICO), S.A., INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SANTANDER MÉXICO, DIVISIÓN FIDUCIARIA',
-  'BANCO NACIONAL DE MÉXICO, S.A., INTEGRANTE DEL GRUPO FINANCIERO BANAMEX, DIVISIÓN FIDUCIARIA',
-  'SCOTIABANK INVERLAT, S.A., INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SCOTIABANK INVERLAT, DIVISIÓN FIDUCIARIA',
+// Bancos fiduciarios — lista exacta proporcionada por el Arquitecto
+const BANCOS = [
+  {
+    corto: 'Banorte',
+    largo: 'BANCO MERCANTIL DEL NORTE, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO BANORTE, DIVISIÓN FIDUCIARIA',
+  },
+  {
+    corto: 'Mifel',
+    largo: 'BANCA MIFEL, SOCIEDAD ANONIMA, INSTITUCION DE BANCA MULTIPLE, GRUPO FINANCIERO MIFEL',
+  },
+  {
+    corto: 'Banco Inmobiliario Mexicano',
+    largo: 'BANCO INMOBILIARIO MEXICANO, SOCIEDAD ANONIMA, INSTITUCION DE BANCA MULTIPLE',
+  },
+  {
+    corto: 'Banco del Bajío',
+    largo: 'BANCO DEL BAJÍO, SOCIEDAD ANONIMA, INSTITUCIÓN DE BANCA MÚLTIPLE',
+  },
+  {
+    corto: 'Monex',
+    largo: 'BANCO MONEX, S.A., INSTITUCIÓN DE BANCA MÚLTIPLE, MONEX GRUPO FINANCIERO',
+  },
+  {
+    corto: 'BBVA México',
+    largo: 'BBVA MÉXICO, S.A. INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO BBVA MÉXICO',
+  },
+  {
+    corto: 'Santander México',
+    largo: 'BANCO SANTANDER MÉXICO, S.A. INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO SANTANDER MÉXICO',
+  },
 ];
 
 export default function StepInmueble({ data, updateData, onNext, onPrev }: Props) {
@@ -42,8 +65,7 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
 
   const canContinue =
     (inmueble.descripcion.trim() || (inmueble.departamento && inmueble.nombreCondominio)) &&
-    inmueble.fideicomisoNumero.trim() &&
-    inmueble.bancoFiduciario.trim();
+    inmueble.fideicomisoNumero.trim();
 
   return (
     <div>
@@ -82,28 +104,68 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
         </div>
 
         <div>
-          <label className="pg-label">Banco Fiduciario *</label>
+          <label className="pg-label">
+            Banco Fiduciario
+            <span style={{ color: 'rgba(245,240,232,0.35)', fontWeight: 'normal', marginLeft: '6px', textTransform: 'none', letterSpacing: 0 }}>
+              (opcional)
+            </span>
+          </label>
           <select
             className="pg-select"
             value={inmueble.bancoFiduciario}
-            onChange={(e) => update('bancoFiduciario', e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '') {
+                update('bancoFiduciario', '');
+              } else if (val === 'OTRO') {
+                update('bancoFiduciario', 'OTRO');
+              } else {
+                const banco = BANCOS.find((b) => b.corto === val);
+                update('bancoFiduciario', banco ? banco.largo : val);
+              }
+            }}
             style={{ marginBottom: '8px' }}
           >
-            {BANCOS_COMUNES.map((b) => (
-              <option key={b} value={b}>{b.split(',')[0]}</option>
+            <option value="">— Sin especificar / Not specified —</option>
+            {BANCOS.map((b) => (
+              <option key={b.corto} value={b.corto}>{b.corto}</option>
             ))}
             <option value="OTRO">Otro (especificar abajo)</option>
           </select>
+
+          {/* Texto legal completo si se seleccionó un banco */}
+          {inmueble.bancoFiduciario && inmueble.bancoFiduciario !== 'OTRO' && (
+            <div style={{
+              marginTop: '6px',
+              padding: '10px 12px',
+              background: 'rgba(201,168,76,0.07)',
+              border: '1px solid rgba(201,168,76,0.2)',
+              borderRadius: '4px',
+              fontSize: '11px',
+              color: 'rgba(245,240,232,0.55)',
+              lineHeight: '1.5',
+              fontStyle: 'italic',
+            }}>
+              {inmueble.bancoFiduciario}
+            </div>
+          )}
+
+          {/* Campo libre si seleccionó "Otro" */}
           {inmueble.bancoFiduciario === 'OTRO' && (
             <input
               className="pg-input"
-              placeholder="Nombre completo del banco fiduciario"
+              placeholder="Nombre completo del banco fiduciario tal como aparece en la escritura"
               onChange={(e) => update('bancoFiduciario', e.target.value)}
+              style={{ marginTop: '6px' }}
             />
           )}
-          <div style={{ fontSize: '11px', color: 'rgba(245,240,232,0.4)', marginTop: '4px' }}>
-            {inmueble.bancoFiduciario !== 'OTRO' && inmueble.bancoFiduciario}
-          </div>
+
+          {/* Aviso si no hay banco */}
+          {!inmueble.bancoFiduciario && (
+            <div style={{ fontSize: '11px', color: 'rgba(245,240,232,0.3)', marginTop: '5px' }}>
+              Si se omite, la cláusula del fideicomiso no incluirá el nombre del banco.
+            </div>
+          )}
         </div>
       </div>
 

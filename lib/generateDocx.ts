@@ -213,8 +213,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // SEGUNDA
     headerRow('SEGUNDA.- LIMITACIÓN', 'SECOND.- LIMITATION'),
     biRow(
-      `El presente poder se otorga de forma limitada sobre el siguiente bien inmueble, contenido en el Fideicomiso identificado administrativamente con el número ${data.inmueble.fideicomisoNumero}, ${data.inmueble.bancoFiduciario}:`,
-      `This power is granted in a limited manner over the following property, contained in the trust identified administratively under number ${data.inmueble.fideicomisoNumero}, ${data.inmueble.bancoFiduciario}:`,
+      `El presente poder se otorga de forma limitada sobre el siguiente bien inmueble, contenido en el Fideicomiso identificado administrativamente con el número ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`,
+      `This power is granted in a limited manner over the following property, contained in the trust identified administratively under number ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`,
     ),
     spacerRow(),
     biRow('INMUEBLE:', 'PROPERTY:', { bold: true, center: true, shade: true }),

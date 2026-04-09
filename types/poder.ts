@@ -74,7 +74,7 @@ export const DEFAULT_PODER: PoderData = {
   inmueble: {
     descripcion: '',
     fideicomisoNumero: '',
-    bancoFiduciario: 'BANCO MERCANTIL DEL NORTE, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO BANORTE, DIVISIÓN FIDUCIARIA',
+    bancoFiduciario: '',
     cuentaPredial: '',
   },
   tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
