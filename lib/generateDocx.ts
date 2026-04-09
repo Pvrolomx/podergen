@@ -224,6 +224,23 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   const apoParaQue   = soloUnApo ? 'para que el apoderado'  : 'para que los apoderados, conjunta o separadamente,';
   const apoForThe    = soloUnApo ? 'for the proxy'          : 'for the representatives, jointly or separately,';
   const apoJointly   = soloUnApo ? ''                       : ', jointly or separately,';
+
+  // Concordancia del PODERDANTE (singular/plural + género)
+  const multPod      = todosLosPoderdantes.length > 1;
+  const todasF       = todosLosPoderdantes.every(p => p.genero === 'F');
+  // "el/la poderdante" vs "los/las poderdantes"
+  const artPodES     = multPod ? (todasF ? 'las poderdantes' : 'los poderdantes') : (c.laEl + ' ' + c.otorgante);
+  const artPodEN     = multPod ? 'the grantors' : 'the grantor';
+  // "del/de la poderdante" vs "de los/las poderdantes"
+  const dePodES      = multPod ? (todasF ? 'de las poderdantes' : 'de los poderdantes') : (c.delDe + ' ' + c.otorgante);
+  // "al/a la poderdante" vs "a los/las poderdantes"
+  const aPodES       = multPod ? (todasF ? 'a las poderdantes' : 'a los poderdantes') : (c.alA + ' ' + c.otorgante);
+  // "de propiedad del/de la poderdante" vs "de los/las poderdantes"
+  const propiedadPodES = multPod ? (todasF ? 'de propiedad de las poderdantes' : 'de propiedad de los poderdantes') : ('de propiedad ' + c.delDe + ' ' + c.otorgante);
+  const propiedadPodEN = multPod ? 'owned by the grantors' : 'owned by the grantor';
+  // "se le otorga" vs "se les otorga"
+  const seLeOtorga   = multPod ? 'se les otorga' : 'se le otorga';
+  const seLeOtorgaEN = multPod ? 'hereby granted to them' : 'hereby granted';
   const ct = buildCertificacionTextos({ ...data, poderdante: todosLosPoderdantes[0] }, c);
   // Textos plurales para el proemio
   const suscritos_ES = multiple
@@ -361,7 +378,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // PRIMERA
     headerRow('PRIMERA.- OTORGAMIENTO DE PODER', col2('FIRST.- GRANTING OF POWERS OF ATTORNEY', FR.primeraHeader)),
     biRow(
-      `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "otorgamos" : "otorgo") : (multiple ? "otorgan" : "otorga")} ${tipoES}, en favor de ${apoderadosStr}, para que ${apoEjercite}${apoConjunta} en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; ${apoPodrán} firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto se le otorga y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.`,
+      `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "otorgamos" : "otorgo") : (multiple ? "otorgan" : "otorga")} ${tipoES}, en favor de ${apoderadosStr}, para que ${apoEjercite}${apoConjunta} en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; ${apoPodrán} firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto ${seLeOtorga} y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.`,
       `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "hereby grant" : "hereby grants") : (multiple ? "grant" : "grants")} ${tipoEN} in favor of ${apoderadosStr}, to be exercised${apoJointly} in terms authorized by paragraphs second and third of article 2554 of the Federal Civil Code, and their equivalent in the further entities of the Republic and the Protocol On Uniform Legal Provisions. For powers of attorney approved with resolution XLVIII of the Seventh International American Conference of the PanAmerican Union, signed on May 7th, 1953, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the Mexican United States on December 22nd, 1951, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the United Mexican States on June 12th, 1953. Having deposited the instrument of ratification with the Secretary General of the Organization of American States on June 24th, 1953; and published in the Official Journal of the Federation on December 3rd, 1953. In accordance with the Interamerican Convention on the Legal Regime of Powers of Attorney to be used abroad, issued by the Organization of American States on January 30th, 1975 and adopted by Mexico according to publication made in the Official Journal of the Federation on February 6th, 1987; and in accordance with the Federal Civil Code and all articles relating to the various Civil Codes of the Federal Entities of the United Mexican States; ${apoTheProxy} sign the public or private documentation that may be necessary to exercise this power, with the amplest capacities to achieve the purpose of the Power in this act granted and may be exercised before Private Persons, or Administrative, Judicial Authorities, whose jurisdiction be Federal, State, or Municipal.`,
     ),
     spacerRow(),
@@ -371,10 +388,10 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     biRow(
       esFideicomiso
         ? `El presente poder se otorga de forma limitada sobre el siguiente bien inmueble, contenido en el Fideicomiso identificado administrativamente con el número ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`
-        : 'El presente poder se otorga de forma limitada sobre el siguiente bien inmueble de propiedad del poderdante:',
+        : `El presente poder se otorga de forma limitada sobre el siguiente bien inmueble ${propiedadPodES}:`,
       esFideicomiso
         ? `This power is granted in a limited manner over the following property, contained in the trust identified administratively under number ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`
-        : 'This power is granted in a limited manner over the following property owned by the grantor:',
+        : `This power is granted in a limited manner over the following property ${propiedadPodEN}:`,
     ),
     spacerRow(),
     biRow('INMUEBLE:', col2('PROPERTY:', FR.inmuebleLabel), { bold: true, center: true, shade: true }),
@@ -395,8 +412,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // CUARTA
     headerRow('CUARTA.- FACULTADES DEL APODERADO', col2('FOURTH.- FACULTIES OF THE PROXY', FR.cuartaHeader)),
     biRow(
-      `El poder otorgado se confiere ÚNICA Y EXCLUSIVAMENTE, ${apoParaQue} en favor ${c.delDe} ${c.otorgante}: ${buildFacultadesSubjuntivoES(data.facultades, soloUnApo)}; respecto ${esFideicomiso ? 'de los derechos fideicomisarios en el fideicomiso mencionado en la CLÁUSULA SEGUNDA que tiene afectado el INMUEBLE' : 'del INMUEBLE mencionado en la CLÁUSULA SEGUNDA'}.`,
-      `The power of attorney hereby granted is ONLY AND EXCLUSIVELY ${apoForThe} in favor of the grantor: ${facultadesText.en}; regarding ${esFideicomiso ? 'the trust rights of the trust mentioned in CLAUSE SECOND, that the PROPERTY is affected by' : 'the PROPERTY mentioned in CLAUSE SECOND'}.`,
+      `El poder otorgado se confiere ÚNICA Y EXCLUSIVAMENTE, ${apoParaQue} en favor ${dePodES}: ${buildFacultadesSubjuntivoES(data.facultades, soloUnApo)}; respecto ${esFideicomiso ? 'de los derechos fideicomisarios en el fideicomiso mencionado en la CLÁUSULA SEGUNDA que tiene afectado el INMUEBLE' : 'del INMUEBLE mencionado en la CLÁUSULA SEGUNDA'}.`,
+      `The power of attorney hereby granted is ONLY AND EXCLUSIVELY ${apoForThe} in favor of ${artPodEN}: ${facultadesText.en}; regarding ${esFideicomiso ? 'the trust rights in the trust mentioned in CLAUSE SECOND, which encumbers the PROPERTY' : 'the PROPERTY described in CLAUSE SECOND'}.`,
     ),
     spacerRow(),
 
@@ -455,17 +472,52 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       headerRow('CERTIFICACIÓN NOTARIAL', col2('NOTARIAL CERTIFICATION', FR.certHeader)),
       biRow('Yo, el Notario Certifico y doy fe:', col2('I, the Notary, Certify and attest:', FR.certYo), { bold: true }),
       spacerRow(),
-      biRow(ct.puntoI_ES, ct.puntoI_EN),
-      biRow(ct.puntoII_ES, ct.puntoII_EN),
-      biRow(ct.puntoIII_ES, ct.puntoIII_EN),
-      biRow(ct.puntoIV_ES, ct.puntoIV_EN),
+      biRow(
+        multPod
+          ? `I.- Que conozco personalmente ${aPodES} del presente instrumento y que tienen la capacidad legal para otorgar este documento.`
+          : ct.puntoI_ES,
+        multPod
+          ? `I.- That I personally know ${artPodEN} of this instrument and that they have legal capacity to grant this document.`
+          : ct.puntoI_EN,
+      ),
+      biRow(
+        multPod
+          ? `II.- Que ${artPodES} se identifican ante mí con sus respectivos pasaportes, y por sus generales manifiestan ser mayores de edad, con los datos señalados en el presente instrumento.`
+          : ct.puntoII_ES,
+        multPod
+          ? `II.- That ${artPodEN} identified themselves before me with their respective passports, and stated to be of legal age, with the information set forth in this instrument.`
+          : ct.puntoII_EN,
+      ),
+      biRow(
+        multPod
+          ? `III.- Que por sus generales ${artPodES}, bajo protesta de decir verdad, manifiestan ser: a. Mayores de edad. b. Con los estados civiles, ocupaciones, nacionalidades y domicilios que respectivamente se les atribuyen en el presente instrumento.`
+          : ct.puntoIII_ES,
+        multPod
+          ? `III.- That as their general information, ${artPodEN}, under oath of truth, declare to be: a. Of Legal Age. b. With the civil statuses, occupations, nationalities and addresses respectively attributed to them in this instrument.`
+          : ct.puntoIII_EN,
+      ),
+      biRow(
+        multPod
+          ? `IV.- Que este instrumento se otorga en los idiomas inglés y español y que manifestaron expresamente ${artPodES} que por este medio aprueban la versión en español, ya que éste es una traducción fiel y correcta en todos sus términos, de la versión en inglés.`
+          : ct.puntoIV_ES,
+        multPod
+          ? `IV.- That this instrument is granted in the Spanish and the English languages and that ${artPodEN} expressly manifest through this means that they approve of the Spanish version, because it is a true and correct translation in all of its terms, of the English version.`
+          : ct.puntoIV_EN,
+      ),
       spacerRow(),
-      biRow(ct.leido_ES, ct.leido_EN),
+      biRow(
+        multPod
+          ? `Leído que fue por mí, el Notario, el Instrumento que antecede ${aPodES} y previa explicación y advertencia que les hice sobre su validez, alcance y consecuencias legales, se manifestaron conformes con su contenido y lo ratifican y firman ante mí.`
+          : ct.leido_ES,
+        multPod
+          ? `This instrument read by me, the Notary, to ${artPodEN} and previous explanation and warnings I made about its validity, scope and legal consequences, they stated their agreement to its contents, ratified, and signed it before me.`
+          : ct.leido_EN,
+      ),
     ] : [
       // Modo suscrito: certificación simplificada
       headerRow('FIRMA Y RATIFICACIÓN', col2('SIGNATURE AND RATIFICATION', FR.firmaRatificacion)),
       biRow(
-        `En fe de lo anterior, ${c.laEl} ${c.otorgante} firma el presente instrumento.`,
+        multPod ? `En fe de lo anterior, ${artPodES} firman el presente instrumento.` : `En fe de lo anterior, ${c.laEl} ${c.otorgante} firma el presente instrumento.`,
         col2(`In witness whereof, the grantor signs this instrument.`, FR.enFeDeLo(c.laEl)),
       ),
     ]),
