@@ -175,5 +175,5 @@ export const FACULTADES_LABELS: Record<keyof Facultades, { es: string; en: strin
   firmarDocumentos: { es: 'Firmar documentos públicos o privados ante cualquier persona física, moral, autoridad o fedatario', en: 'Sign public or private documents before any person, corporation, authority or notary public' },
   escrow: { es: 'Suscribir los formatos necesarios ante la empresa escrow correspondiente', en: 'Sign the necessary forms with the corresponding escrow company' },
   isr: { es: 'Solicitar el cálculo, la exención y deducción en términos de la Ley del ISR', en: 'Request estimate, exemption and deduction pursuant to the Capital Gains Tax Law' },
-  sustitucionFiduciaria: { es: 'Solicitar y gestionar la sustitución del fiduciario, así como la transmisión del fideicomiso a otra institución fiduciaria que el apoderado determine conveniente', en: 'Request and manage the substitution of the trustee, as well as the transfer of the trust to another fiduciary institution as the proxy deems appropriate' },
+  sustitucionFiduciaria: { es: 'Solicitar y gestionar la sustitución del fiduciario, así como la transmisión del fideicomiso a otra institución fiduciaria', en: 'Request and manage the substitution of the trustee, as well as the transfer of the trust to another fiduciary institution' },
 };
