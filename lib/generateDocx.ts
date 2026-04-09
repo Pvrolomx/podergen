@@ -23,6 +23,38 @@ import {
   FACULTADES_LABELS,
 } from '@/types/poder';
 
+// Helper: bilingual row donde el texto contiene \n → párrafos separados
+function multilineRow(es: string, en: string): TableRow {
+  const makeLines = (text: string): Paragraph[] =>
+    text.split('\n').map(line =>
+      new Paragraph({
+        alignment: AlignmentType.JUSTIFIED,
+        spacing: { before: 20, after: 20 },
+        children: [new TextRun({ text: line, size: 18, font: 'Times New Roman' })],
+      })
+    );
+
+  const makeCell = (lines: Paragraph[], isLeft: boolean): TableCell =>
+    new TableCell({
+      width: { size: 50, type: WidthType.PERCENTAGE },
+      shading: undefined,
+      borders: {
+        top: { style: BorderStyle.NONE, size: 0 },
+        bottom: { style: BorderStyle.NONE, size: 0 },
+        left: { style: BorderStyle.NONE, size: 0 },
+        right: isLeft
+          ? { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' }
+          : { style: BorderStyle.NONE, size: 0 },
+      },
+      margins: { top: 60, bottom: 60, left: 120, right: 120 },
+      children: lines,
+    });
+
+  return new TableRow({
+    children: [makeCell(makeLines(es), true), makeCell(makeLines(en), false)],
+  });
+}
+
 // Helper: create a bilingual row (ES left, EN right)
 function biRow(
   es: string,
@@ -488,12 +520,12 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
           ? `II.- That ${artPodEN} identified themselves before me with their respective passports, and stated to be of legal age, with the information set forth in this instrument.`
           : ct.puntoII_EN,
       ),
-      biRow(
+      multilineRow(
         multPod
-          ? `III.- Que por sus generales ${artPodES}, bajo protesta de decir verdad, manifiestan ser: a. Mayores de edad. b. Con los estados civiles, ocupaciones, nacionalidades y domicilios que respectivamente se les atribuyen en el presente instrumento.`
+          ? `III.- Que por sus generales ${artPodES}, bajo protesta de decir verdad, manifiestan ser:\na. Mayores de edad.\nb. Con los estados civiles, ocupaciones, nacionalidades y domicilios que respectivamente se les atribuyen en el presente instrumento.`
           : ct.puntoIII_ES,
         multPod
-          ? `III.- That as their general information, ${artPodEN}, under oath of truth, declare to be: a. Of Legal Age. b. With the civil statuses, occupations, nationalities and addresses respectively attributed to them in this instrument.`
+          ? `III.- That as per their general information, ${artPodEN}, under oath of truth, declare to be:\na. Of Legal Age.\nb. With the civil statuses, occupations, nationalities and addresses respectively attributed to them in this instrument.`
           : ct.puntoIII_EN,
       ),
       biRow(

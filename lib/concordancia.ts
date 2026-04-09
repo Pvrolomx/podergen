@@ -78,6 +78,30 @@ export function buildApoderadosTexto(data: PoderData): string {
 /**
  * Textos del certificado notarial según género
  */
+// Mapa de nacionalidades ES → EN
+const NAC_EN: Record<string, string> = {
+  'estadounidense': 'American',
+  'canadiense': 'Canadian',
+  'mexicana': 'Mexican',
+  'mexicano': 'Mexican',
+  'británica': 'British',
+  'británico': 'British',
+  'francesa': 'French',
+  'francés': 'French',
+  'alemana': 'German',
+  'alemán': 'German',
+  'italiana': 'Italian',
+  'italiano': 'Italian',
+  'española': 'Spanish',
+  'español': 'Spanish',
+  'australiana': 'Australian',
+  'australiano': 'Australian',
+};
+
+function nacEN(nac: string): string {
+  return NAC_EN[nac.toLowerCase()] || nac;
+}
+
 export function buildCertificacionTextos(data: PoderData, c: Concordancia) {
   const p = data.poderdante;
   const nombre = p.nombre.toUpperCase();
@@ -87,10 +111,10 @@ export function buildCertificacionTextos(data: PoderData, c: Concordancia) {
     puntoI_EN: `I.- That I personally know the grantor of this instrument and that ${c.elLaEN} has legal capacity to grant this document.`,
 
     puntoII_ES: `II.- Que ${c.laEl} ${c.otorgante} se identifica ante mí con Pasaporte ${p.nacionalidad} número: ${p.pasaporte}, ${c.nacidoA} el día ${p.fechaNacimiento}.`,
-    puntoII_EN: `II.- That the appearing party ${c.identificadoAEN} with ${c.elLaEN.charAt(0).toUpperCase() + c.elLaEN.slice(1)}r ${p.nacionalidad} Passport number: ${p.pasaporte}, ${c.nacidoAEN} ${p.fechaNacimiento}.`,
+    puntoII_EN: `II.- That the appearing party ${c.identificadoAEN} with ${c.elLaEN.charAt(0).toUpperCase() + c.elLaEN.slice(1)}r ${nacEN(p.nacionalidad)} Passport number: ${p.pasaporte}, ${c.nacidoAEN} ${p.fechaNacimiento}.`,
 
-    puntoIII_ES: `III.- Que por sus generales ${c.laEl} ${c.compareciente}, bajo protesta de decir verdad, manifiesta ser:\na. Mayor de edad.\nb. ${data.poderdante.estadoCivil === 'casado' ? (c.elLa === 'la' ? 'Casada' : 'Casado') : data.poderdante.estadoCivil === 'soltero' ? (c.elLa === 'la' ? 'Soltera' : 'Soltero') : data.poderdante.estadoCivil === 'divorciado' ? (c.elLa === 'la' ? 'Divorciada' : 'Divorciado') : data.poderdante.estadoCivil === 'viudo' ? (c.elLa === 'la' ? 'Viuda' : 'Viudo') : 'En unión libre'}.\nc. ${p.ocupacion || 'No especificado'}.\nd. De nacionalidad ${p.nacionalidad}.\ne. Domicilio: ${p.domicilio}.`,
-    puntoIII_EN: `III.- That as ${c.elLaEN.charAt(0).toUpperCase() + c.elLaEN.slice(1)}r general information, the appearing party stated to be:\na. Of Legal Age.\nb. ${data.poderdante.estadoCivil === 'casado' ? 'Married' : data.poderdante.estadoCivil === 'soltero' ? 'Single' : data.poderdante.estadoCivil === 'divorciado' ? 'Divorced' : data.poderdante.estadoCivil === 'viudo' ? 'Widowed' : 'Common-law union'}.\nc. ${p.ocupacion || 'Not specified'}.\nd. ${p.nacionalidad} Nationality.\ne. Address: ${p.domicilio}.`,
+    puntoIII_ES: `III.- Que por sus generales ${c.laEl} ${c.compareciente}, bajo protesta de decir verdad, manifiesta ser:\na. Mayor de edad.\nb. ${data.poderdante.estadoCivil === 'casado' ? (c.elLa === 'la' ? 'Casada' : 'Casado') : data.poderdante.estadoCivil === 'soltero' ? (c.elLa === 'la' ? 'Soltera' : 'Soltero') : data.poderdante.estadoCivil === 'divorciado' ? (c.elLa === 'la' ? 'Divorciada' : 'Divorciado') : data.poderdante.estadoCivil === 'viudo' ? (c.elLa === 'la' ? 'Viuda' : 'Viudo') : 'En unión libre'}.\nc. ${p.ocupacion ? p.ocupacion.split(' / ')[0] : 'No especificado'}.\nd. De nacionalidad ${p.nacionalidad}.\ne. Domicilio: ${p.domicilio}.`,
+    puntoIII_EN: `III.- That as per ${c.elLaEN} general information, the appearing party stated to be:\na. Of Legal Age.\nb. ${data.poderdante.estadoCivil === 'casado' ? 'Married' : data.poderdante.estadoCivil === 'soltero' ? 'Single' : data.poderdante.estadoCivil === 'divorciado' ? 'Divorced' : data.poderdante.estadoCivil === 'viudo' ? 'Widowed' : 'Common-law union'}.\nc. ${p.ocupacion ? p.ocupacion.replace(' / Retired', '').replace('Retirado(a)', 'Retired') : 'Not specified'}.\nd. ${nacEN(p.nacionalidad)} Nationality.\ne. Address: ${p.domicilio}.`,
 
     puntoIV_ES: `IV.- Que este instrumento se otorga en los idiomas inglés y español y que manifestó expresamente ${c.laEl} parte ${c.otorgante} que por este medio aprueba la versión en español, ya que éste es una traducción fiel y correcta en todos sus términos, de la versión en inglés.`,
     puntoIV_EN: `IV.- That this instrument is granted in the Spanish and the English languages and that the grantor expressly manifests through this means that ${c.elLaEN} approves of the Spanish version, because it is a true and correct translation in all of its terms, of the English version.`,
