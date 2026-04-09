@@ -138,8 +138,26 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                 </div>
                 <div>
                   <label className="pg-label">Nacionalidad / Nationality</label>
-                  <input className="pg-input" placeholder="ej. Canadian" value={pd.nacionalidad}
-                    onChange={(e) => updatePoderdanteN(idx, 'nacionalidad', e.target.value)} />
+                  <select className="pg-select" value={
+                    ['estadounidense','canadiense','mexicana'].includes(pd.nacionalidad.toLowerCase())
+                      ? pd.nacionalidad.toLowerCase() : pd.nacionalidad ? 'otra' : ''
+                  } onChange={(e) => {
+                    if (e.target.value === 'otra') updatePoderdanteN(idx, 'nacionalidad', '');
+                    else if (e.target.value === 'estadounidense') updatePoderdanteN(idx, 'nacionalidad', 'Estadounidense');
+                    else if (e.target.value === 'canadiense') updatePoderdanteN(idx, 'nacionalidad', 'Canadiense');
+                    else if (e.target.value === 'mexicana') updatePoderdanteN(idx, 'nacionalidad', 'Mexicana');
+                  }}>
+                    <option value="">— Seleccionar —</option>
+                    <option value="estadounidense">Estadounidense / American</option>
+                    <option value="canadiense">Canadiense / Canadian</option>
+                    <option value="mexicana">Mexicana / Mexican</option>
+                    <option value="otra">Otra / Other</option>
+                  </select>
+                  {pd.nacionalidad && !['Estadounidense','Canadiense','Mexicana'].includes(pd.nacionalidad) && (
+                    <input className="pg-input" placeholder="ej. Británica / British" value={pd.nacionalidad}
+                      onChange={(e) => updatePoderdanteN(idx, 'nacionalidad', e.target.value)}
+                      style={{ marginTop: '6px' }} />
+                  )}
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -155,8 +173,22 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                 </div>
                 <div>
                   <label className="pg-label">Ocupación / Occupation</label>
-                  <input className="pg-input" placeholder="ej. Retired" value={pd.ocupacion}
-                    onChange={(e) => updatePoderdanteN(idx, 'ocupacion', e.target.value)} />
+                  <select className="pg-select" value={
+                    ['retirado','retirada'].includes(pd.ocupacion.toLowerCase()) ? 'retirado'
+                    : pd.ocupacion ? 'otra' : ''
+                  } onChange={(e) => {
+                    if (e.target.value === 'retirado') updatePoderdanteN(idx, 'ocupacion', 'Retirado(a) / Retired');
+                    else if (e.target.value === 'otra') updatePoderdanteN(idx, 'ocupacion', '');
+                  }}>
+                    <option value="">— Seleccionar —</option>
+                    <option value="retirado">Retirado(a) / Retired</option>
+                    <option value="otra">Otra / Other</option>
+                  </select>
+                  {pd.ocupacion && !pd.ocupacion.startsWith('Retirado') && (
+                    <input className="pg-input" placeholder="ej. Empresario / Business Owner" value={pd.ocupacion}
+                      onChange={(e) => updatePoderdanteN(idx, 'ocupacion', e.target.value)}
+                      style={{ marginTop: '6px' }} />
+                  )}
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>

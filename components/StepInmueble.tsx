@@ -170,21 +170,16 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
     setTranslating(true);
     setTranslateError('');
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: 'You are a legal translator specializing in Mexican real estate property descriptions. Translate Spanish property registry descriptions to formal English. Preserve all technical terms, measurements, cardinal directions (Noreste→Northeast, Sureste→Southeast, Suroeste→Southwest, Noroeste→Northwest), and legal vocabulary. Use "linear meters" for "ml", "square meters" for "m²". Keep the same structure and punctuation. Output ONLY the translated text, no explanations.',
-          messages: [{ role: 'user', content: `Translate this Mexican property registry description to English:\n\n${texto}` }],
-        }),
+        body: JSON.stringify({ texto, idioma: data.idiomaDoc ?? 'en' }),
       });
-      const data = await response.json();
-      if (data.content?.[0]?.text) {
-        update('descripcionEN', data.content[0].text.trim());
+      const result = await response.json();
+      if (result.translated) {
+        update('descripcionEN', result.translated);
       } else {
-        setTranslateError('No se recibió traducción. Intenta de nuevo.');
+        setTranslateError(result.error || 'No se recibió traducción. Intenta de nuevo.');
       }
     } catch {
       setTranslateError('Error de conexión. Verifica tu red e intenta de nuevo.');
@@ -509,7 +504,7 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label className="pg-label">Descripción Registral Completa (Español) *</label>
+              <label className="pg-label">Descripción Legal (Español) *</label>
               <textarea className="pg-textarea" rows={7}
                 placeholder="Pega aquí el texto completo de la descripción del inmueble tal como aparece en la escritura o fideicomiso, incluyendo medidas y linderos..."
                 value={inmueble.descripcion}
