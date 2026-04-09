@@ -173,10 +173,18 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   // ecES/ecEN ahora manejados por el motor de concordancia
   const facultadesText = buildFacultadesText(data.facultades);
 
-  // Full property description
+  // Full property description — ES column
   const inmuebleDesc =
     data.inmueble.descripcion ||
-    [data.inmueble.departamento, data.inmueble.nombreCondominio, data.inmueble.direccion, 
+    [data.inmueble.departamento, data.inmueble.nombreCondominio, data.inmueble.direccion,
+     data.inmueble.municipio, data.inmueble.estado, data.inmueble.cp ? `C.P. ${data.inmueble.cp}` : '']
+    .filter(Boolean).join(', ');
+
+  // EN column — use translation if available, fallback to ES text
+  const inmuebleDescEN =
+    data.inmueble.descripcionEN?.trim() ||
+    data.inmueble.descripcion ||
+    [data.inmueble.departamento, data.inmueble.nombreCondominio, data.inmueble.direccion,
      data.inmueble.municipio, data.inmueble.estado, data.inmueble.cp ? `C.P. ${data.inmueble.cp}` : '']
     .filter(Boolean).join(', ');
 
@@ -289,7 +297,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     biRow('INMUEBLE:', 'PROPERTY:', { bold: true, center: true, shade: true }),
     biRow(
       inmuebleDesc + predialES + (escrituraES ? ' ' + escrituraES : '') + ' EN ADELANTE EL INMUEBLE.',
-      inmuebleDesc + predialEN + (escrituraEN ? ' ' + escrituraEN : '') + ' HEREINAFTER THE PROPERTY.',
+      inmuebleDescEN + predialEN + (escrituraEN ? ' ' + escrituraEN : '') + ' HEREINAFTER THE PROPERTY.',
     ),
     spacerRow(),
 

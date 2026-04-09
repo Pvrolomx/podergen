@@ -37,9 +37,110 @@ const TOGGLE_STYLE = (active: boolean) => ({
   textTransform: 'uppercase' as const,
 });
 
+
+// ── Componente de traducción ──────────────────────────────────────
+interface TranslateBlockProps {
+  descripcion: string;
+  descripcionEN: string;
+  translating: boolean;
+  translateError: string;
+  onTranslate: () => void;
+  onChangeEN: (v: string) => void;
+}
+
+function TranslateBlock({ descripcion, descripcionEN, translating, translateError, onTranslate, onChangeEN }: TranslateBlockProps) {
+  const hasES = descripcion.trim().length > 0;
+  const hasEN = descripcionEN.trim().length > 0;
+
+  return (
+    <div style={{
+      borderTop: '1px solid rgba(201,168,76,0.15)',
+      paddingTop: '14px',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <label className="pg-label" style={{ marginBottom: 0 }}>
+          Property Description (English)
+          <span style={{ color: 'rgba(245,240,232,0.35)', fontWeight: 'normal', marginLeft: '6px', textTransform: 'none', letterSpacing: 0 }}>
+            — columna derecha del documento
+          </span>
+        </label>
+        {hasES && (
+          <button
+            onClick={onTranslate}
+            disabled={translating}
+            style={{
+              padding: '6px 14px',
+              fontSize: '12px',
+              background: translating ? 'rgba(201,168,76,0.08)' : 'linear-gradient(135deg, rgba(201,168,76,0.2) 0%, rgba(201,168,76,0.08) 100%)',
+              border: '1px solid rgba(201,168,76,0.4)',
+              borderRadius: '4px',
+              color: translating ? 'rgba(201,168,76,0.4)' : 'var(--pg-gold)',
+              cursor: translating ? 'not-allowed' : 'pointer',
+              fontFamily: 'Times New Roman, serif',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s',
+            }}
+          >
+            {translating ? (
+              <>
+                <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⟳</span>
+                Traduciendo...
+              </>
+            ) : hasEN ? (
+              <>✦ Retraducir</>
+            ) : (
+              <>✦ Traducir con IA</>
+            )}
+          </button>
+        )}
+      </div>
+
+      {translateError && (
+        <div style={{ fontSize: '12px', color: '#E74C3C', marginBottom: '8px', padding: '6px 10px', background: 'rgba(192,57,43,0.1)', borderRadius: '4px' }}>
+          {translateError}
+        </div>
+      )}
+
+      <textarea
+        className="pg-textarea"
+        rows={hasEN ? 5 : 3}
+        placeholder={
+          !hasES
+            ? 'Llena primero la descripción en español...'
+            : translating
+            ? 'Traduciendo...'
+            : 'Edita manualmente o usa el botón "Traducir con IA" →'
+        }
+        value={descripcionEN}
+        onChange={(e) => onChangeEN(e.target.value)}
+        disabled={translating}
+        style={{ opacity: translating ? 0.5 : 1 }}
+      />
+
+      {hasEN && !translating && (
+        <div style={{ fontSize: '11px', color: 'rgba(201,168,76,0.6)', marginTop: '4px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <span>✓</span>
+          <span>Traducción lista — puedes editarla manualmente si necesitas ajustes.</span>
+        </div>
+      )}
+
+      {!hasEN && !translating && hasES && (
+        <div style={{ fontSize: '11px', color: 'rgba(245,240,232,0.3)', marginTop: '4px' }}>
+          Sin traducción: la columna EN del documento usará el texto en español como fallback.
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function StepInmueble({ data, updateData, onNext, onPrev }: Props) {
   const { inmueble } = data;
   const [descMode, setDescMode] = useState<'simple' | 'full'>('simple');
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState('');
 
   const update = (field: keyof Inmueble, value: string) => {
     updateData({ inmueble: { ...inmueble, [field]: value } });
@@ -62,6 +163,35 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
     (inmueble.bancoFiduciario === 'OTRO' ? 'OTRO' : inmueble.bancoFiduciario === '' ? '' : 'OTRO');
 
   const esFideicomiso = inmueble.modo === 'fideicomiso';
+
+  const handleTranslate = async () => {
+    const texto = inmueble.descripcion.trim();
+    if (!texto) return;
+    setTranslating(true);
+    setTranslateError('');
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: 'You are a legal translator specializing in Mexican real estate property descriptions. Translate Spanish property registry descriptions to formal English. Preserve all technical terms, measurements, cardinal directions (Noreste→Northeast, Sureste→Southeast, Suroeste→Southwest, Noroeste→Northwest), and legal vocabulary. Use "linear meters" for "ml", "square meters" for "m²". Keep the same structure and punctuation. Output ONLY the translated text, no explanations.',
+          messages: [{ role: 'user', content: `Translate this Mexican property registry description to English:\n\n${texto}` }],
+        }),
+      });
+      const data = await response.json();
+      if (data.content?.[0]?.text) {
+        update('descripcionEN', data.content[0].text.trim());
+      } else {
+        setTranslateError('No se recibió traducción. Intenta de nuevo.');
+      }
+    } catch {
+      setTranslateError('Error de conexión. Verifica tu red e intenta de nuevo.');
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const canContinue = inmueble.descripcion.trim() || 
     (inmueble.departamento && inmueble.nombreCondominio);
@@ -356,28 +486,47 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
               </div>
             </div>
             <div>
-              <label className="pg-label">Descripción registral adicional (medidas, linderos, etc.)</label>
+              <label className="pg-label">Descripción registral (Español)</label>
               <textarea className="pg-textarea" rows={4}
                 placeholder="Pega aquí la descripción registral completa con medidas y linderos (recomendado para validez notarial)"
                 value={inmueble.descripcion}
-                onChange={(e) => update('descripcion', e.target.value)}
+                onChange={(e) => { update('descripcion', e.target.value); if (inmueble.descripcionEN) update('descripcionEN', ''); }}
               />
               <div style={{ fontSize: '11px', color: 'rgba(245,240,232,0.35)', marginTop: '4px' }}>
                 Si se deja vacío, se usarán los campos de arriba para construir la descripción.
               </div>
             </div>
+            {/* Traducción EN */}
+            <TranslateBlock
+              descripcion={inmueble.descripcion}
+              descripcionEN={inmueble.descripcionEN || ''}
+              translating={translating}
+              translateError={translateError}
+              onTranslate={handleTranslate}
+              onChangeEN={(v) => update('descripcionEN', v)}
+            />
           </div>
         ) : (
-          <div>
-            <label className="pg-label">Descripción Registral Completa *</label>
-            <textarea className="pg-textarea" rows={8}
-              placeholder="Pega aquí el texto completo de la descripción del inmueble tal como aparece en la escritura o fideicomiso, incluyendo medidas y linderos..."
-              value={inmueble.descripcion}
-              onChange={(e) => update('descripcion', e.target.value)}
-            />
-            <div style={{ fontSize: '11px', color: 'rgba(245,240,232,0.35)', marginTop: '4px' }}>
-              Se insertará tal cual en el documento. Incluye departamento, condominio, dirección, municipio, estado, C.P., medidas y linderos.
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label className="pg-label">Descripción Registral Completa (Español) *</label>
+              <textarea className="pg-textarea" rows={7}
+                placeholder="Pega aquí el texto completo de la descripción del inmueble tal como aparece en la escritura o fideicomiso, incluyendo medidas y linderos..."
+                value={inmueble.descripcion}
+                onChange={(e) => { update('descripcion', e.target.value); if (inmueble.descripcionEN) update('descripcionEN', ''); }}
+              />
+              <div style={{ fontSize: '11px', color: 'rgba(245,240,232,0.35)', marginTop: '4px' }}>
+                Se insertará tal cual en la columna izquierda del documento bilingüe.
+              </div>
             </div>
+            <TranslateBlock
+              descripcion={inmueble.descripcion}
+              descripcionEN={inmueble.descripcionEN || ''}
+              translating={translating}
+              translateError={translateError}
+              onTranslate={handleTranslate}
+              onChangeEN={(v) => update('descripcionEN', v)}
+            />
           </div>
         )}
       </div>

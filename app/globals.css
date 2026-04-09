@@ -321,3 +321,8 @@ body {
 ::-webkit-scrollbar-track { background: var(--pg-navy); }
 ::-webkit-scrollbar-thumb { background: var(--pg-gold-dark); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--pg-gold); }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

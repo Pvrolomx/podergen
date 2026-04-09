@@ -20,7 +20,8 @@ export interface Apoderado {
 
 export interface Inmueble {
   modo: ModoTitulo;
-  descripcion: string;
+  descripcion: string;      // ES
+  descripcionEN: string;    // EN — generada con IA o manual
   fideicomisoNumero: string;
   bancoFiduciario: string;
   cuentaPredial: string;
@@ -93,6 +94,7 @@ export const DEFAULT_PODER: PoderData = {
   inmueble: {
     modo: 'fideicomiso',
     descripcion: '',
+    descripcionEN: '',
     fideicomisoNumero: '',
     bancoFiduciario: '',
     cuentaPredial: '',
