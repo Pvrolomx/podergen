@@ -435,158 +435,102 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     headerRow('FIRMAS — SIGNATURES', col2('FIRMAS — SIGNATURES', 'SIGNATURES — FIRMAS')),
   ];
 
-  // Signature block rows
+  // ── Sección de Firmas — estructura completa bilingüe ─────────────────
+  // Helper para párrafo centrado
+  const sigP = (text: string, bold = false, size = 18, italic = false) =>
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 60 },
+      children: [new TextRun({ text, bold, size, font: 'Times New Roman', italics: italic })],
+    });
+  const sigLine = () => sigP('_________________________________');
+  const sigSpace = (n = 400) => new Paragraph({ spacing: { before: n }, children: [new TextRun({ text: '' })] });
+
+  const sigCell = (children: Paragraph[], isLeft: boolean, topMargin = 160) =>
+    new TableCell({
+      width: { size: 50, type: WidthType.PERCENTAGE },
+      borders: {
+        top: { style: BorderStyle.NONE, size: 0 },
+        bottom: { style: BorderStyle.NONE, size: 0 },
+        left: { style: BorderStyle.NONE, size: 0 },
+        right: isLeft
+          ? { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' }
+          : { style: BorderStyle.NONE, size: 0 },
+      },
+      margins: { top: topMargin, bottom: 120, left: 160, right: 160 },
+      children,
+    });
+
+  const sigRow = (leftChildren: Paragraph[], rightChildren: Paragraph[], topMargin = 160) =>
+    new TableRow({ children: [sigCell(leftChildren, true, topMargin), sigCell(rightChildren, false, topMargin)] });
+
+  // ── Nombres de poderdante(s) para la firma ────────────────────────
+  const poderdantesFirmaNames: Paragraph[] = todosLosPoderdantes.map(p =>
+    sigP(p.nombre.toUpperCase(), true, 18)
+  );
+  const poderdantesFirmaLabel = multiple
+    ? col2('The Grantors', FR.firmaLabelPlur)
+    : col2('Grantor', c.elLa === 'la' ? FR.firmaLabel_F : FR.firmaLabel_M);
+  const poderdantesLabelES = multiple ? 'Los Poderdantes' : `${c.elLa.charAt(0).toUpperCase() + c.elLa.slice(1)} Poderdante`;
+  const lugarFechaVal = data.lugar && data.fecha ? `${data.lugar}, ${data.fecha}` : '_________________________________';
+
   const sigRows: TableRow[] = [
-    new TableRow({
-      children: [
-        new TableCell({
-          width: { size: 50, type: WidthType.PERCENTAGE },
-          borders: {
-            top: { style: BorderStyle.NONE, size: 0 },
-            bottom: { style: BorderStyle.NONE, size: 0 },
-            left: { style: BorderStyle.NONE, size: 0 },
-            right: { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' },
-          },
-          margins: { top: 120, bottom: 120, left: 120, right: 120 },
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: `Lugar y Fecha / ${col2('Place and Date', 'Lieu et Date')}:`,
-                  bold: true,
-                  size: 18,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: data.lugar && data.fecha ? `${data.lugar}, ${data.fecha}` : '___________________________',
-                  size: 18,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-          ],
-        }),
-        new TableCell({
-          width: { size: 50, type: WidthType.PERCENTAGE },
-          borders: {
-            top: { style: BorderStyle.NONE, size: 0 },
-            bottom: { style: BorderStyle.NONE, size: 0 },
-            left: { style: BorderStyle.NONE, size: 0 },
-            right: { style: BorderStyle.NONE, size: 0 },
-          },
-          margins: { top: 120, bottom: 120, left: 120, right: 120 },
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: `Firma y Sello del Notario Público / ${col2('Notary Seal & Signature', 'Sceau et Signature Notariale')}:`,
-                  bold: true,
-                  size: 18,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: '___________________________',
-                  size: 18,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-          ],
-        }),
+    // ── Fila 1: Lugar y Fecha ─────────────────────────────────────────
+    sigRow(
+      [
+        sigP('Lugar y Fecha:', true, 16),
+        sigP(lugarFechaVal, false, 18),
       ],
-    }),
-    // Name of notary
-    new TableRow({
-      children: [
-        new TableCell({
-          width: { size: 50, type: WidthType.PERCENTAGE },
-          borders: {
-            top: { style: BorderStyle.NONE, size: 0 },
-            bottom: { style: BorderStyle.NONE, size: 0 },
-            left: { style: BorderStyle.NONE, size: 0 },
-            right: { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' },
-          },
-          margins: { top: 600, bottom: 120, left: 120, right: 120 },
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: '___________________________',
-                  size: 18,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: 'Nombre del Notario / Name of Notary:',
-                  size: 16,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-          ],
-        }),
-        new TableCell({
-          width: { size: 50, type: WidthType.PERCENTAGE },
-          borders: {
-            top: { style: BorderStyle.NONE, size: 0 },
-            bottom: { style: BorderStyle.NONE, size: 0 },
-            left: { style: BorderStyle.NONE, size: 0 },
-            right: { style: BorderStyle.NONE, size: 0 },
-          },
-          margins: { top: 600, bottom: 120, left: 120, right: 120 },
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: '___________________________',
-                  size: 18,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: data.poderdante.nombre.toUpperCase(),
-                  bold: true,
-                  size: 18,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({
-                  text: multiple ? `Los Poderdantes / ${col2('The Grantors', FR.firmaLabelPlur)}` : `${c.elLa.charAt(0).toUpperCase() + c.elLa.slice(1)} Poderdante / ${col2('Grantor', c.elLa === 'la' ? FR.firmaLabel_F : FR.firmaLabel_M)}`,
-                  size: 16,
-                  font: 'Times New Roman',
-                }),
-              ],
-            }),
-          ],
-        }),
+      [
+        sigP(col2('Place and Date:', 'Lieu et Date:'), true, 16),
+        sigP(lugarFechaVal, false, 18),
       ],
-    }),
+      200
+    ),
+
+    // ── Fila 2: Nombre del Notario ────────────────────────────────────
+    sigRow(
+      [
+        sigSpace(500),
+        sigLine(),
+        sigP('Nombre del Notario Público', false, 16, true),
+      ],
+      [
+        sigSpace(500),
+        sigLine(),
+        sigP(col2('Name of Notary Public', 'Nom du Notaire Public'), false, 16, true),
+      ]
+    ),
+
+    // ── Fila 3: Firma y Sello del Notario ─────────────────────────────
+    sigRow(
+      [
+        sigSpace(500),
+        sigLine(),
+        sigP('Firma y Sello del Notario Público', false, 16, true),
+      ],
+      [
+        sigSpace(500),
+        sigLine(),
+        sigP(col2('Notary Seal & Signature', 'Sceau et Signature Notariale'), false, 16, true),
+      ]
+    ),
+
+    // ── Fila 4: Poderdante(s) ─────────────────────────────────────────
+    sigRow(
+      [
+        sigSpace(500),
+        sigLine(),
+        ...poderdantesFirmaNames,
+        sigP(poderdantesLabelES, false, 16, true),
+      ],
+      [
+        sigSpace(500),
+        sigLine(),
+        ...poderdantesFirmaNames,
+        sigP(poderdantesFirmaLabel, false, 16, true),
+      ]
+    ),
   ];
 
   const mainTable = new Table({
