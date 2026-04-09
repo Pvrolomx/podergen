@@ -130,7 +130,7 @@ export default function StepFacultades({ data, updateData, onNext, onPrev }: Pro
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <button className="pg-btn-secondary" onClick={onPrev}>← Anterior</button>
-        <button className="pg-btn-primary" onClick={onNext} disabled={!canContinue}>
+        <button className="pg-btn-primary" onClick={onNext} >
           Previsualizar y Generar →
         </button>
       </div>

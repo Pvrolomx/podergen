@@ -242,7 +242,7 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
         <button
           className="pg-btn-primary"
           onClick={onNext}
-          disabled={!canContinue}
+          
         >
           Siguiente: Inmueble →
         </button>

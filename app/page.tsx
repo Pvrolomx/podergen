@@ -27,10 +27,8 @@ export default function Home() {
 
   const next = () => setStep((s) => Math.min(s + 1, 4));
   const prev = () => setStep((s) => Math.max(s - 1, 1));
-  // Demo: libre acceso a cualquier paso. Normal: solo pasos ya visitados.
-  const goTo = (n: number) => {
-    if (isDemo || n <= step) setStep(n);
-  };
+  // Navegación libre en todo momento — sin validación bloqueante.
+  const goTo = (n: number) => setStep(n);
 
   const loadDemo = () => {
     setData(DEMO_PODER);
@@ -159,11 +157,11 @@ export default function Home() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                   <button
                     onClick={() => goTo(s.num)}
-                    className={`pg-step-dot ${step === s.num ? 'active' : (isDemo || step > s.num) ? 'done' : 'pending'}`}
-                    style={{ cursor: (isDemo || step > s.num) ? 'pointer' : 'default' }}
-                    title={isDemo ? `Ir al Paso ${s.num}: ${s.label}` : undefined}
+                    className={`pg-step-dot ${step === s.num ? 'active' : step > s.num ? 'done' : 'pending'}`}
+                    style={{ cursor: 'pointer' }}
+                    title={`Ir al Paso ${s.num}: ${s.label}`}
                   >
-                    {(isDemo || step > s.num) && step !== s.num ? '✓' : s.num}
+                    {step > s.num ? '✓' : s.num}
                   </button>
                   <span style={{
                     fontSize: '10px',

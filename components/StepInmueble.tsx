@@ -533,7 +533,7 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <button className="pg-btn-secondary" onClick={onPrev}>← Anterior</button>
-        <button className="pg-btn-primary" onClick={onNext} disabled={!canContinue}>
+        <button className="pg-btn-primary" onClick={onNext} >
           Siguiente: Facultades →
         </button>
       </div>
