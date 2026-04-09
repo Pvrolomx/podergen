@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { PoderData, IdiomaDoc } from '@/types/poder';
 import { DEFAULT_PODER } from '@/types/poder';
 import { DEMO_PODER } from '@/lib/demoData';
@@ -40,7 +40,71 @@ export default function Home() {
     setData(DEFAULT_PODER);
     setIsDemo(false);
     setStep(1);
+    try { localStorage.removeItem('podergen_draft'); } catch {}
   };
+
+  // ── Auto-save en localStorage (debounce 1s) ──────────────────────
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('podergen_draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.data) {
+          setData(parsed.data);
+          if (typeof parsed.step === 'number') setStep(parsed.step);
+        }
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (isDemo) return; // no auto-guardar en modo demo
+    const t = setTimeout(() => {
+      try { localStorage.setItem('podergen_draft', JSON.stringify({ version: '1.0', savedAt: new Date().toISOString(), step, data })); } catch {}
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [data, step, isDemo]);
+
+  // ── Guardar borrador → JSON ──────────────────────────────────────
+  const exportDraft = useCallback(() => {
+    const nombre = data.poderdante?.nombre?.split(' ')[0] || 'BORRADOR';
+    const fecha = new Date().toISOString().slice(0, 10);
+    const blob = new Blob(
+      [JSON.stringify({ version: '1.0', savedAt: new Date().toISOString(), step, data }, null, 2)],
+      { type: 'application/json' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `PODERGEN_${nombre}_${fecha}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [data, step]);
+
+  // ── Cargar borrador ← JSON ───────────────────────────────────────
+  const importDraft = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (parsed.data) {
+          setData(parsed.data);
+          if (typeof parsed.step === 'number') setStep(parsed.step);
+          setIsDemo(false);
+        } else {
+          setData(parsed); // legacy
+        }
+      } catch {
+        alert('Error al cargar el archivo. Verifica que sea un borrador válido de PoderGen (.json).');
+      }
+    };
+    input.click();
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -75,6 +139,52 @@ export default function Home() {
 
         {/* Demo button + Reset */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* Guardar / Cargar */}
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              onClick={importDraft}
+              style={{
+                padding: '7px 13px',
+                fontSize: '12px',
+                background: 'transparent',
+                border: '1px solid rgba(201,168,76,0.3)',
+                borderRadius: '4px',
+                color: 'rgba(245,240,232,0.6)',
+                cursor: 'pointer',
+                fontFamily: 'Times New Roman, serif',
+                letterSpacing: '0.04em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                whiteSpace: 'nowrap',
+              }}
+              title="Cargar borrador guardado (.json)"
+            >
+              ↑ Cargar
+            </button>
+            <button
+              onClick={exportDraft}
+              style={{
+                padding: '7px 13px',
+                fontSize: '12px',
+                background: 'transparent',
+                border: '1px solid rgba(201,168,76,0.3)',
+                borderRadius: '4px',
+                color: 'rgba(245,240,232,0.6)',
+                cursor: 'pointer',
+                fontFamily: 'Times New Roman, serif',
+                letterSpacing: '0.04em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                whiteSpace: 'nowrap',
+              }}
+              title="Guardar borrador como archivo .json"
+            >
+              ↓ Guardar
+            </button>
+          </div>
+
           {/* Toggle EN / FR */}
           <div style={{ display: 'flex', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
             {(['en', 'fr'] as IdiomaDoc[]).map((lang) => (
