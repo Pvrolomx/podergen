@@ -174,20 +174,24 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                 <div>
                   <label className="pg-label">Ocupación / Occupation</label>
                   <select className="pg-select" value={
-                    ['retirado','retirada'].includes(pd.ocupacion.toLowerCase()) ? 'retirado'
-                    : pd.ocupacion ? 'otra' : ''
+                    pd.ocupacion.startsWith('Retirado') ? 'retirado'
+                    : pd.ocupacion === '' ? '' : 'otra'
                   } onChange={(e) => {
                     if (e.target.value === 'retirado') updatePoderdanteN(idx, 'ocupacion', 'Retirado(a) / Retired');
-                    else if (e.target.value === 'otra') updatePoderdanteN(idx, 'ocupacion', '');
+                    else if (e.target.value === 'otra') updatePoderdanteN(idx, 'ocupacion', ' '); // espacio = sentinel "Otra seleccionada"
+                    else updatePoderdanteN(idx, 'ocupacion', '');
                   }}>
                     <option value="">— Seleccionar —</option>
                     <option value="retirado">Retirado(a) / Retired</option>
                     <option value="otra">Otra / Other</option>
                   </select>
-                  {pd.ocupacion && !pd.ocupacion.startsWith('Retirado') && (
-                    <input className="pg-input" placeholder="ej. Empresario / Business Owner" value={pd.ocupacion}
+                  {!pd.ocupacion.startsWith('Retirado') && pd.ocupacion !== '' && (
+                    <input className="pg-input" placeholder="ej. Empresario / Business Owner"
+                      value={pd.ocupacion.trim()}
                       onChange={(e) => updatePoderdanteN(idx, 'ocupacion', e.target.value)}
-                      style={{ marginTop: '6px' }} />
+                      style={{ marginTop: '6px' }}
+                      autoFocus
+                    />
                   )}
                 </div>
               </div>

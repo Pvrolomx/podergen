@@ -165,6 +165,47 @@ function buildFacultadesText(facultades: Facultades): { es: string; en: string }
   };
 }
 
+// Convierte infinitivo a subjuntivo según número de apoderados
+// "Adquirir derechos" → "adquiera/adquieran derechos"
+// Regla: quitar verbo inicial y reemplazar con forma subjuntiva
+const INF_TO_SUBJ: Record<string, [string, string]> = {
+  // [singular, plural]
+  'Solicitar y gestionar':          ['solicite y gestione',   'soliciten y gestionen'],
+  'Solicitar el cálculo':           ['solicite el cálculo',   'soliciten el cálculo'],
+  'Adquirir':                       ['adquiera',              'adquieran'],
+  'Girar':                          ['gire',                  'giren'],
+  'Llevar a cabo':                  ['lleven a cabo',         'lleven a cabo'],
+  'Ceder':                          ['ceda',                  'cedan'],
+  'Realizar donaciones':            ['realice donaciones',    'realicen donaciones'],
+  'Realizar convenios':             ['realice convenios',     'realicen convenios'],
+  'Ejecución o ampliación':         ['ejecute o amplíe',      'ejecuten o amplíen'],
+  'Ratificar':                      ['ratifique',             'ratifiquen'],
+  'Otorgar finiquito':              ['otorgue finiquito',     'otorguen finiquito'],
+  'Firmar documentos':              ['firme documentos',      'firmen documentos'],
+  'Suscribir':                      ['suscriba',              'suscriban'],
+};
+
+function toSubjuntivo(text: string, singular: boolean): string {
+  for (const [inf, [sing, plur]] of Object.entries(INF_TO_SUBJ)) {
+    if (text.startsWith(inf)) {
+      const subj = singular ? sing : plur;
+      return subj + text.slice(inf.length);
+    }
+  }
+  // fallback: lowercase primera letra
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function buildFacultadesSubjuntivoES(facultades: Facultades, singular: boolean): string {
+  const items: string[] = [];
+  for (const key of Object.keys(facultades) as (keyof Facultades)[]) {
+    if (facultades[key]) {
+      items.push(toSubjuntivo(FACULTADES_LABELS[key].es, singular));
+    }
+  }
+  return items.join('; ');
+}
+
 export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   // Múltiples poderdantes
   const todosLosPoderdantes = data.poderdantes?.length > 0 ? data.poderdantes : [data.poderdante];
@@ -354,7 +395,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // CUARTA
     headerRow('CUARTA.- FACULTADES DEL APODERADO', col2('FOURTH.- FACULTIES OF THE PROXY', FR.cuartaHeader)),
     biRow(
-      `El poder otorgado se confiere ÚNICA Y EXCLUSIVAMENTE, ${apoParaQue} en favor del poderdante: ${facultadesText.es}; respecto ${esFideicomiso ? 'de los derechos fideicomisarios en el fideicomiso mencionado en la CLÁUSULA SEGUNDA que tiene afectado el INMUEBLE' : 'del INMUEBLE mencionado en la CLÁUSULA SEGUNDA'}.`,
+      `El poder otorgado se confiere ÚNICA Y EXCLUSIVAMENTE, ${apoParaQue} en favor ${c.delDe} ${c.otorgante}: ${buildFacultadesSubjuntivoES(data.facultades, soloUnApo)}; respecto ${esFideicomiso ? 'de los derechos fideicomisarios en el fideicomiso mencionado en la CLÁUSULA SEGUNDA que tiene afectado el INMUEBLE' : 'del INMUEBLE mencionado en la CLÁUSULA SEGUNDA'}.`,
       `The power of attorney hereby granted is ONLY AND EXCLUSIVELY ${apoForThe} in favor of the grantor: ${facultadesText.en}; regarding ${esFideicomiso ? 'the trust rights of the trust mentioned in CLAUSE SECOND, that the PROPERTY is affected by' : 'the PROPERTY mentioned in CLAUSE SECOND'}.`,
     ),
     spacerRow(),
