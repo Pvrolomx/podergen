@@ -66,20 +66,38 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
   const canContinue = inmueble.descripcion.trim() || 
     (inmueble.departamento && inmueble.nombreCondominio);
 
-  // Genera párrafo de escritura
+  // Genera texto RPP según estado
+  const buildRPPPreview = () => {
+    const i = inmueble;
+    if (!i.rppEstado) return '';
+    const ciudad = i.escrituraNotaria || (i.rppEstado === 'nayarit' ? 'Bahía de Banderas, Nayarit' : 'Puerto Vallarta, Jalisco');
+    const rpp = `Registro Público de la Propiedad y de Comercio de ${ciudad}`;
+    if (i.rppTipo === 'folio_real' && i.rppFolioReal) {
+      const label = i.rppEstado === 'nayarit' ? 'Folio Real Electrónico' : 'Folio Real';
+      return `, inscrito ante el ${rpp}, bajo ${label} número ${i.rppFolioReal}`;
+    } else if (i.rppTipo === 'legacy') {
+      if (i.rppEstado === 'nayarit' && i.rppLibroNay)
+        return `, inscrito ante el ${rpp}, bajo Libro ${i.rppLibroNay}${i.rppSeccionNay ? ', Sección ' + i.rppSeccionNay : ''}${i.rppSerieNay ? ', Serie ' + i.rppSerieNay : ''}${i.rppPartidaNay ? ', Partida ' + i.rppPartidaNay : ''}`;
+      if (i.rppEstado === 'jalisco' && i.rppDocumentoJal)
+        return `, inscrito ante el ${rpp}, bajo Documento ${i.rppDocumentoJal}${i.rppFoliosJal ? ', Folios ' + i.rppFoliosJal : ''}${i.rppLibroJal ? ', Libro ' + i.rppLibroJal : ''}${i.rppSeccionJal ? ', Sección ' + i.rppSeccionJal : ''}`;
+    }
+    return '';
+  };
+
+  // Genera párrafo de escritura (vista previa)
   const buildEscrituraParrafo = () => {
     const i = inmueble;
     if (!i.escrituraNumero && !i.escrituraNotario) return '';
-    let es = `El inmueble consta en Escritura Pública número ${i.escrituraNumero || '___'}`;
-    let en = `The property is described in Public Deed number ${i.escrituraNumero || '___'}`;
-    if (i.escrituraFecha) { es += `, de fecha ${i.escrituraFecha}`; en += `, dated ${i.escrituraFecha}`; }
-    if (i.escrituraNotario) { es += `, otorgada ante el Licenciado ${i.escrituraNotario}`; en += `, executed before Notary ${i.escrituraNotario}`; }
-    if (i.escrituraNotaria) { es += `, Notario Público ${i.escrituraNotaria}`; en += `, Notary Public ${i.escrituraNotaria}`; }
-    if (i.escrituraVolumen) { es += `, Volumen ${i.escrituraVolumen}`; en += `, Volume ${i.escrituraVolumen}`; }
-    if (i.escrituraFolio) { es += `, Folio ${i.escrituraFolio}`; en += `, Folio ${i.escrituraFolio}`; }
-    if (i.escrituraRPP) { es += `. Inscrita en el Registro Público de la Propiedad bajo ${i.escrituraRPP}`; en += `. Registered at the Public Registry of Property under ${i.escrituraRPP}`; }
-    es += '.'; en += '.';
-    return es;
+    let txt = `El inmueble consta en Escritura Pública número ${i.escrituraNumero || '___'}`;
+    if (i.escrituraFecha) txt += `, de fecha ${i.escrituraFecha}`;
+    if (i.escrituraNotario) txt += `, otorgada ante el Licenciado ${i.escrituraNotario}`;
+    if (i.escrituraNotaria) txt += `, Notario Público ${i.escrituraNotaria}`;
+    if (i.escrituraVolumen) txt += `, Volumen ${i.escrituraVolumen}`;
+    if (i.escrituraFolio) txt += `, Folio ${i.escrituraFolio}`;
+    const rpp = buildRPPPreview();
+    if (rpp) txt += rpp;
+    txt += '.';
+    return txt;
   };
 
   return (
@@ -214,9 +232,58 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
               <label className="pg-label">Folio <span style={{ opacity: 0.4 }}>(opcional)</span></label>
               <input className="pg-input" placeholder="ej. 234" value={inmueble.escrituraFolio} onChange={(e) => update('escrituraFolio', e.target.value)} />
             </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label className="pg-label">Inscripción RPP <span style={{ opacity: 0.4 }}>(opcional)</span></label>
-              <input className="pg-input" placeholder="ej. Inscrita bajo partida 456, tomo 12, sección primera del RPP de Bahía de Banderas" value={inmueble.escrituraRPP} onChange={(e) => update('escrituraRPP', e.target.value)} />
+            {/* RPP - Sistema estructurado igual que OfertaGen */}
+            <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(201,168,76,0.15)', paddingTop: '14px', marginTop: '4px' }}>
+              <div style={{ fontSize: '13px', color: 'var(--pg-gold)', fontWeight: 'bold', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Inscripción RPP <span style={{ fontSize: '11px', fontWeight: 'normal', opacity: 0.5 }}>(opcional)</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label className="pg-label">Estado del RPP</label>
+                  <select className="pg-select" value={inmueble.rppEstado} onChange={(e) => update('rppEstado', e.target.value)}>
+                    <option value="">— Sin inscripción —</option>
+                    <option value="nayarit">Nayarit (Bahía de Banderas, Bucerías)</option>
+                    <option value="jalisco">Jalisco (Puerto Vallarta)</option>
+                  </select>
+                </div>
+                {inmueble.rppEstado && (
+                  <div>
+                    <label className="pg-label">Tipo de inscripción</label>
+                    <select className="pg-select" value={inmueble.rppTipo} onChange={(e) => update('rppTipo', e.target.value)}>
+                      <option value="folio_real">Folio Real{inmueble.rppEstado === 'nayarit' ? ' Electrónico' : ''}</option>
+                      <option value="legacy">Inscripción tradicional (legacy)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Folio Real — ambos estados */}
+              {inmueble.rppEstado && inmueble.rppTipo === 'folio_real' && (
+                <div style={{ marginTop: '10px' }}>
+                  <label className="pg-label">{inmueble.rppEstado === 'nayarit' ? 'Folio Real Electrónico' : 'Folio Real'}</label>
+                  <input className="pg-input" placeholder="ej. 54832" value={inmueble.rppFolioReal} onChange={(e) => update('rppFolioReal', e.target.value)} />
+                </div>
+              )}
+
+              {/* Legacy Nayarit */}
+              {inmueble.rppEstado === 'nayarit' && inmueble.rppTipo === 'legacy' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                  <div><label className="pg-label">Libro</label><input className="pg-input" placeholder="ej. 3" value={inmueble.rppLibroNay} onChange={(e) => update('rppLibroNay', e.target.value)} /></div>
+                  <div><label className="pg-label">Sección</label><input className="pg-input" placeholder="ej. Primera" value={inmueble.rppSeccionNay} onChange={(e) => update('rppSeccionNay', e.target.value)} /></div>
+                  <div><label className="pg-label">Serie</label><input className="pg-input" placeholder="ej. A" value={inmueble.rppSerieNay} onChange={(e) => update('rppSerieNay', e.target.value)} /></div>
+                  <div><label className="pg-label">Partida</label><input className="pg-input" placeholder="ej. 245" value={inmueble.rppPartidaNay} onChange={(e) => update('rppPartidaNay', e.target.value)} /></div>
+                </div>
+              )}
+
+              {/* Legacy Jalisco */}
+              {inmueble.rppEstado === 'jalisco' && inmueble.rppTipo === 'legacy' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                  <div><label className="pg-label">Documento</label><input className="pg-input" placeholder="ej. 1234" value={inmueble.rppDocumentoJal} onChange={(e) => update('rppDocumentoJal', e.target.value)} /></div>
+                  <div><label className="pg-label">Folios</label><input className="pg-input" placeholder="ej. 45-48" value={inmueble.rppFoliosJal} onChange={(e) => update('rppFoliosJal', e.target.value)} /></div>
+                  <div><label className="pg-label">Libro</label><input className="pg-input" placeholder="ej. 5" value={inmueble.rppLibroJal} onChange={(e) => update('rppLibroJal', e.target.value)} /></div>
+                  <div><label className="pg-label">Sección</label><input className="pg-input" placeholder="ej. Primera" value={inmueble.rppSeccionJal} onChange={(e) => update('rppSeccionJal', e.target.value)} /></div>
+                </div>
+              )}
             </div>
           </div>
 

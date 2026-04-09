@@ -185,6 +185,42 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     .filter(Boolean).join(', ');
 
   // Párrafo de escritura (solo modo escritura)
+  const buildRPPES = (): string => {
+    const i = data.inmueble;
+    if (!i.rppEstado) return '';
+    const ciudad = i.escrituraNotaria || (i.rppEstado === 'nayarit' ? 'Bahía de Banderas, Nayarit' : 'Puerto Vallarta, Jalisco');
+    const rpp = `Registro Público de la Propiedad y de Comercio de ${ciudad}`;
+    if (i.rppTipo === 'folio_real' && i.rppFolioReal) {
+      const label = i.rppEstado === 'nayarit' ? 'Folio Real Electrónico' : 'Folio Real';
+      return `, inscrito ante el ${rpp}, bajo ${label} número ${i.rppFolioReal}`;
+    } else if (i.rppTipo === 'legacy') {
+      if (i.rppEstado === 'nayarit' && i.rppLibroNay) {
+        return `, inscrito ante el ${rpp}, bajo Libro ${i.rppLibroNay}${i.rppSeccionNay ? ', Sección ' + i.rppSeccionNay : ''}${i.rppSerieNay ? ', Serie ' + i.rppSerieNay : ''}${i.rppPartidaNay ? ', Partida ' + i.rppPartidaNay : ''}`;
+      } else if (i.rppEstado === 'jalisco' && i.rppDocumentoJal) {
+        return `, inscrito ante el ${rpp}, bajo Documento ${i.rppDocumentoJal}${i.rppFoliosJal ? ', Folios ' + i.rppFoliosJal : ''}${i.rppLibroJal ? ', Libro ' + i.rppLibroJal : ''}${i.rppSeccionJal ? ', Sección ' + i.rppSeccionJal : ''}`;
+      }
+    }
+    return '';
+  };
+
+  const buildRPPEN = (): string => {
+    const i = data.inmueble;
+    if (!i.rppEstado) return '';
+    const ciudad = i.escrituraNotaria || (i.rppEstado === 'nayarit' ? 'Bahía de Banderas, Nayarit' : 'Puerto Vallarta, Jalisco');
+    const rpp = `Public Registry of Property and Commerce of ${ciudad}`;
+    if (i.rppTipo === 'folio_real' && i.rppFolioReal) {
+      const label = i.rppEstado === 'nayarit' ? 'Electronic Real Folio' : 'Real Folio';
+      return `, registered before the ${rpp}, under ${label} number ${i.rppFolioReal}`;
+    } else if (i.rppTipo === 'legacy') {
+      if (i.rppEstado === 'nayarit' && i.rppLibroNay) {
+        return `, registered before the ${rpp}, under Book ${i.rppLibroNay}${i.rppSeccionNay ? ', Section ' + i.rppSeccionNay : ''}${i.rppSerieNay ? ', Series ' + i.rppSerieNay : ''}${i.rppPartidaNay ? ', Entry ' + i.rppPartidaNay : ''}`;
+      } else if (i.rppEstado === 'jalisco' && i.rppDocumentoJal) {
+        return `, registered before the ${rpp}, under Document ${i.rppDocumentoJal}${i.rppFoliosJal ? ', Folios ' + i.rppFoliosJal : ''}${i.rppLibroJal ? ', Book ' + i.rppLibroJal : ''}${i.rppSeccionJal ? ', Section ' + i.rppSeccionJal : ''}`;
+      }
+    }
+    return '';
+  };
+
   const buildEscrituraParrafoES = (): string => {
     const i = data.inmueble;
     if (!i.escrituraNumero && !i.escrituraNotario) return '';
@@ -194,7 +230,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     if (i.escrituraNotaria) txt += `, Notario Público ${i.escrituraNotaria}`;
     if (i.escrituraVolumen) txt += `, Volumen ${i.escrituraVolumen}`;
     if (i.escrituraFolio) txt += `, Folio ${i.escrituraFolio}`;
-    if (i.escrituraRPP) txt += `. Inscrita en el Registro Público de la Propiedad bajo ${i.escrituraRPP}`;
+    const rppStr = buildRPPES();
+    if (rppStr) txt += rppStr;
     return txt + '.';
   };
 
@@ -207,7 +244,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     if (i.escrituraNotaria) txt += `, Notary Public ${i.escrituraNotaria}`;
     if (i.escrituraVolumen) txt += `, Volume ${i.escrituraVolumen}`;
     if (i.escrituraFolio) txt += `, Folio ${i.escrituraFolio}`;
-    if (i.escrituraRPP) txt += `. Registered at the Public Registry of Property under ${i.escrituraRPP}`;
+    const rppStr = buildRPPEN();
+    if (rppStr) txt += rppStr;
     return txt + '.';
   };
 

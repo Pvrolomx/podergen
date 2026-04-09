@@ -30,7 +30,18 @@ export interface Inmueble {
   escrituraNotaria: string;
   escrituraVolumen: string;
   escrituraFolio: string;
-  escrituraRPP: string;
+  // ── RPP ──
+  rppEstado: string;       // 'nayarit' | 'jalisco' | ''
+  rppTipo: string;         // 'folio_real' | 'legacy'
+  rppFolioReal: string;
+  rppLibroNay: string;
+  rppSeccionNay: string;
+  rppSerieNay: string;
+  rppPartidaNay: string;
+  rppDocumentoJal: string;
+  rppFoliosJal: string;
+  rppLibroJal: string;
+  rppSeccionJal: string;
   nombreCondominio?: string;
   departamento?: string;
   direccion?: string;
@@ -91,7 +102,17 @@ export const DEFAULT_PODER: PoderData = {
     escrituraNotaria: '',
     escrituraVolumen: '',
     escrituraFolio: '',
-    escrituraRPP: '',
+    rppEstado: 'nayarit',
+    rppTipo: 'folio_real',
+    rppFolioReal: '',
+    rppLibroNay: '',
+    rppSeccionNay: '',
+    rppSerieNay: '',
+    rppPartidaNay: '',
+    rppDocumentoJal: '',
+    rppFoliosJal: '',
+    rppLibroJal: '',
+    rppSeccionJal: '',
   },
   tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
   facultades: {
