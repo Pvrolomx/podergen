@@ -3,6 +3,7 @@ export type EstadoCivil = 'soltero' | 'casado' | 'divorciado' | 'viudo' | 'union
 export type TipoPoder = 'pleitos_cobranzas' | 'administracion' | 'dominio';
 export type ModoTitulo = 'fideicomiso' | 'escritura';
 export type ModoProemio = 'notarial' | 'suscrito';
+export type RegimenEstado = 'nayarit' | 'jalisco';
 
 export interface Poderdante {
   nombre: string;
@@ -68,12 +69,14 @@ export interface Facultades {
 }
 
 export interface PoderData {
-  poderdante: Poderdante;
+  poderdante: Poderdante;          // Poderdante principal
+  poderdantes: Poderdante[];       // Lista completa (incluye el principal)
   apoderados: Apoderado[];
   inmueble: Inmueble;
   tipos: TipoPoder[];
   facultades: Facultades;
   modoProemio: ModoProemio;  // 'notarial' | 'suscrito'
+  regimenEstado: RegimenEstado; // 'nayarit' | 'jalisco'
   lugar?: string;
   fecha?: string;
 }
@@ -120,6 +123,8 @@ export const DEFAULT_PODER: PoderData = {
   },
   tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
   modoProemio: 'notarial',
+  regimenEstado: 'nayarit',
+  poderdantes: [],
   facultades: {
     adquirirDerechos: true,
     darInstrucciones: true,

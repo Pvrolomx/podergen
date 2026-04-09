@@ -106,3 +106,31 @@ export function buildCertificacionTextos(data: PoderData, c: Concordancia) {
     firma_label_ES: `${nombre}\n${c.elLa.charAt(0).toUpperCase() + c.elLa.slice(1)} Poderdante / Grantor`,
   };
 }
+
+/**
+ * Construye el texto del proemio para múltiples poderdantes
+ * Ej: "JOHN DOE Y JANE DOE" o "JOHN DOE, JANE DOE Y PETER SMITH"
+ */
+export function buildPoderdantesStr(data: PoderData): string {
+  const todos = data.poderdantes.length > 0 ? data.poderdantes : [data.poderdante];
+  if (todos.length === 1) return todos[0].nombre.toUpperCase();
+  if (todos.length === 2) return `${todos[0].nombre.toUpperCase()} Y ${todos[1].nombre.toUpperCase()}`;
+  const last = todos[todos.length - 1];
+  const rest = todos.slice(0, -1);
+  return `${rest.map(p => p.nombre.toUpperCase()).join(', ')} Y ${last.nombre.toUpperCase()}`;
+}
+
+/**
+ * Género del grupo: 'M' si todos masculino o mixto, 'F' si todas femenino
+ */
+export function getGeneroGrupo(data: PoderData): 'M' | 'F' {
+  const todos = data.poderdantes.length > 0 ? data.poderdantes : [data.poderdante];
+  return todos.every(p => p.genero === 'F') ? 'F' : 'M';
+}
+
+/**
+ * ¿Hay más de un poderdante?
+ */
+export function esMultiple(data: PoderData): boolean {
+  return (data.poderdantes?.length ?? 0) > 1;
+}

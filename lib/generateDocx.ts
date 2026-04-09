@@ -15,7 +15,7 @@ import {
   ShadingType,
 } from 'docx';
 import type { PoderData, Facultades } from '@/types/poder';
-import { buildConcordancia, buildApoderadosTexto, buildCertificacionTextos } from '@/lib/concordancia';
+import { buildConcordancia, buildApoderadosTexto, buildCertificacionTextos, buildPoderdantesStr, getGeneroGrupo, esMultiple } from '@/lib/concordancia';
 import {
   ESTADO_CIVIL_LABELS,
   TIPO_PODER_LABELS,
@@ -165,9 +165,19 @@ function buildFacultadesText(facultades: Facultades): { es: string; en: string }
 }
 
 export async function generatePoderDocx(data: PoderData): Promise<Blob> {
-  const c = buildConcordancia(data);
+  // Múltiples poderdantes
+  const todosLosPoderdantes = data.poderdantes?.length > 0 ? data.poderdantes : [data.poderdante];
+  const multiple = todosLosPoderdantes.length > 1;
+  const poderdantesStr = buildPoderdantesStr(data);
+  // Concordancia: usa el primer poderdante para género base; si múltiple, masculino genérico
+  const c = buildConcordancia({ ...data, poderdante: todosLosPoderdantes[0] });
   const apoderadosStr = buildApoderadosTexto(data);
-  const ct = buildCertificacionTextos(data, c);
+  const ct = buildCertificacionTextos({ ...data, poderdante: todosLosPoderdantes[0] }, c);
+  // Textos plurales para el proemio
+  const suscritos_ES = multiple
+    ? (todosLosPoderdantes.every(p => p.genero === 'F') ? 'Las suscritas' : 'Los suscritos')
+    : (todosLosPoderdantes[0].genero === 'F' ? 'La suscrita' : 'El suscrito');
+  const suscritos_EN = 'The undersigned';
   const tipoES = buildPoderTitulo(data);
   const tipoEN = buildPoderTituloEN(data);
   // ecES/ecEN ahora manejados por el motor de concordancia
@@ -264,16 +274,15 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // ── Proemio — varía según modoProemio ──────────────────────────
     biRow(
       data.modoProemio === 'suscrito'
-        ? (() => {
-            const esPlural = data.apoderados.length > 1 || false; // plural si hay co-otorgantes (futuro)
-            const esFem = data.poderdante.genero === 'F';
-            const suscritos = esFem ? 'La suscrita' : 'El suscrito';
-            return `--- ${suscritos} ${data.poderdante.nombre.toUpperCase()}, ${esFem ? 'comparezco' : 'comparezco'} a fin de:`;
-          })()
-        : ct.compareció_ES,
+        ? `--- ${suscritos_ES} ${poderdantesStr}, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:`
+        : (multiple
+            ? `El Notario Público que autoriza, certifica: que ante mí comparecieron ${poderdantesStr}, a fin de:`
+            : ct.compareció_ES),
       data.modoProemio === 'suscrito'
-        ? `--- The undersigned ${data.poderdante.nombre.toUpperCase()}, appeared to:`
-        : ct.compareció_EN,
+        ? `--- ${suscritos_EN} ${poderdantesStr}, appeared to:`
+        : (multiple
+            ? `The Notary Public who authorizes certifies that: ${poderdantesStr}, appeared before me to:`
+            : ct.compareció_EN),
       { center: false }
     ),
     spacerRow(),
@@ -285,10 +294,10 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     spacerRow(),
     biRow(
       data.modoProemio === 'suscrito'
-        ? `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto otorgo y formalizo a favor de ${apoderadosStr}, de acuerdo con las siguientes:`
-        : `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto otorga y formaliza a favor de ${apoderadosStr}, de acuerdo con las siguientes:`,
+        ? `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgamos y formalizamos' : 'otorgo y formalizo'} a favor de ${apoderadosStr}, de acuerdo con las siguientes:`
+        : `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgan y formalizan' : 'otorga y formaliza'} a favor de ${apoderadosStr}, de acuerdo con las siguientes:`,
       data.modoProemio === 'suscrito'
-        ? `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is hereby granted and formalized in favor of ${apoderadosStr}, according to the following:`
+        ? `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is hereby ${multiple ? 'granted and formalized' : 'granted and formalized'} in favor of ${apoderadosStr}, according to the following:`
         : `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is granted and formalized through this act in favor of ${apoderadosStr}, according to the following:`,
     ),
     spacerRow(),
@@ -300,8 +309,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // PRIMERA
     headerRow('PRIMERA.- OTORGAMIENTO DE PODER', 'FIRST.- GRANTING OF POWERS OF ATTORNEY'),
     biRow(
-      `${data.poderdante.nombre.toUpperCase()}, ${data.modoProemio === "suscrito" ? "otorgo" : "otorga"} ${tipoES}, en favor de ${apoderadosStr}, para que lo ejerciten, conjuntamente o por separado, en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; los apoderados podrán firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto se le otorga y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.`,
-      `${data.poderdante.nombre.toUpperCase()}, ${data.modoProemio === "suscrito" ? "hereby grants" : "grants"} ${tipoEN} in favor of ${apoderadosStr}, to be exercised, jointly or separately, in terms authorized by paragraphs second and third of article 2554 of the Federal Civil Code, and their equivalent in the further entities of the Republic and the Protocol On Uniform Legal Provisions. For powers of attorney approved with resolution XLVIII of the Seventh International American Conference of the PanAmerican Union, signed on May 7th, 1953, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the Mexican United States on December 22nd, 1951, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the United Mexican States on June 12th, 1953. Having deposited the instrument of ratification with the Secretary General of the Organization of American States on June 24th, 1953; and published in the Official Journal of the Federation on December 3rd, 1953. In accordance with the Interamerican Convention on the Legal Regime of Powers of Attorney to be used abroad, issued by the Organization of American States on January 30th, 1975 and adopted by Mexico according to publication made in the Official Journal of the Federation on February 6th, 1987; and in accordance with the Federal Civil Code and all articles relating to the various Civil Codes of the Federal Entities of the United Mexican States; The proxies may sign the public or private documentation that may be necessary to exercise this power, with the amplest capacities to achieve the purpose of the Power in this act granted and may be exercised before Private Persons, or Administrative, Judicial Authorities, whose jurisdiction be Federal, State, or Municipal.`,
+      `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "otorgamos" : "otorgo") : (multiple ? "otorgan" : "otorga")} ${tipoES}, en favor de ${apoderadosStr}, para que lo ejerciten, conjuntamente o por separado, en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; los apoderados podrán firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto se le otorga y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.`,
+      `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "hereby grant" : "hereby grants") : (multiple ? "grant" : "grants")} ${tipoEN} in favor of ${apoderadosStr}, to be exercised, jointly or separately, in terms authorized by paragraphs second and third of article 2554 of the Federal Civil Code, and their equivalent in the further entities of the Republic and the Protocol On Uniform Legal Provisions. For powers of attorney approved with resolution XLVIII of the Seventh International American Conference of the PanAmerican Union, signed on May 7th, 1953, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the Mexican United States on December 22nd, 1951, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the United Mexican States on June 12th, 1953. Having deposited the instrument of ratification with the Secretary General of the Organization of American States on June 24th, 1953; and published in the Official Journal of the Federation on December 3rd, 1953. In accordance with the Interamerican Convention on the Legal Regime of Powers of Attorney to be used abroad, issued by the Organization of American States on January 30th, 1975 and adopted by Mexico according to publication made in the Official Journal of the Federation on February 6th, 1987; and in accordance with the Federal Civil Code and all articles relating to the various Civil Codes of the Federal Entities of the United Mexican States; The proxies may sign the public or private documentation that may be necessary to exercise this power, with the amplest capacities to achieve the purpose of the Power in this act granted and may be exercised before Private Persons, or Administrative, Judicial Authorities, whose jurisdiction be Federal, State, or Municipal.`,
     ),
     spacerRow(),
 
@@ -357,18 +366,37 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     ),
     spacerRow(),
 
-    // CÓDIGO CIVIL NAYARIT
-    headerRow('CÓDIGO CIVIL DEL ESTADO DE NAYARIT', 'CIVIL CODE OF THE STATE OF NAYARIT'),
-    biRow(
-      '"Artículo 1,926.- En todos los poderes generales para pleitos y cobranzas bastará que se diga que se otorgan con todas las facultades generales y las especiales que requieran cláusula especial conforme a la ley, para que se entiendan conferidos sin limitación alguna. En los poderes generales para administrar bienes, bastará expresar que se dan con ese carácter para que el apoderado tenga todas las facultades de dueño, tanto en lo relativo a los bienes, como para hacer toda clase de gestiones, a fin de defenderlos. Cuando se quisieren limitar, en los tres casos antes mencionados, las facultades del apoderado, se consignarán las limitaciones o los poderes serán especiales. Los notarios insertarán este artículo en los testimonios de los poderes que otorguen."',
-      '"Article 1,926.- In all general powers for lawsuits and collections, it will suffice to say that they are granted with all the general and special powers that require a special clause in accordance with the law, so that they are understood to be conferred without any limitation. In the general powers to administer assets, it will suffice to state that they are given in this capacity so that the agent has all the faculties of ownership, both in relation to the assets, and to carry out all kinds of procedures, in order to defend them. When they want to limit, in the three aforementioned cases, the powers of the attorney, the limitations will be recorded or the powers will be special. Notaries will insert this article in the testimonials of the powers they grant."',
-    ),
-    spacerRow(),
-    biRow(
-      '"Artículo 1,927.- El mandato debe otorgarse en escritura pública o en carta poder firmada ante dos testigos ratificadas las firmas del otorgante y testigos ante notario, ante los jueces o autoridades administrativas correspondientes: I.- Cuando sea general; II.- Cuando el interés del negocio para que se confiere sea superior al equivalente a mil veces el salario mínimo general vigente en el estado de Nayarit, al momento de otorgarse; o cuando se requiera para la enajenación de inmuebles. III.- Cuando en virtud de él haya de ejecutar el mandatario a nombre del mandante, algún acto que, conforme a la ley deba constar en instrumento público; y IV.- Para que el mandatario pueda hacer donaciones en nombre o por cuenta del mandante, deberá éste otorgar poder especial en cada caso."',
-      '"Article 1,927.- The mandate must be granted in a public deed or in a power of attorney signed before two witnesses ratified by the signatures of the grantor and witnesses before a notary, before the corresponding judges or administrative authorities: I.- When it is general; II.- When the interest of the business for which it is conferred is greater than the equivalent of one thousand times the general minimum wage in force in the state of Nayarit, at the time it is granted; or when it is required for the alienation of real estate. III.- When by virtue of it the agent has to execute on behalf of the principal, some act that, according to the law must be recorded in a public instrument; and IV.- In order for the agent to make donations in the name or on behalf of the principal, the latter must grant a special power of attorney in each case."',
-    ),
-    spacerRow(),
+    // CÓDIGO CIVIL ESTATAL — condicional Nayarit vs Jalisco
+    ...(data.regimenEstado === 'jalisco' ? [
+      headerRow('CÓDIGO CIVIL DEL ESTADO DE JALISCO', 'CIVIL CODE OF THE STATE OF JALISCO'),
+      biRow(
+        '"Artículo 2,207.- En los poderes generales judiciales, bastará decir que se otorgan con ese carácter, para que el apoderado pueda representar al poderdante en todo negocio de jurisdicción voluntaria, mixta y contenciosa, desde su principio hasta su fin; siempre que no se trate de actos que conforme a las leyes requieran poder especial, en tal caso se consignarán detalladamente las facultades que se confieran con su carácter de especialidad. En los poderes generales para administrar bienes, bastará decir que se otorgan con ese carácter, para que el apoderado tenga toda clase de facultades administrativas. En los poderes generales para ejercer actos de dominio, será suficiente que se exprese que se confieren con ese carácter, a efecto de que el apoderado tenga todas las facultades de propietario, en lo relativo a los bienes como en su defensa."',
+        '"Article 2,207.- In general judicial powers of attorney, it shall suffice to state that they are granted with that character, so that the proxy may represent the grantor in all matters of voluntary, mixed and contentious jurisdiction, from beginning to end; provided that they do not involve acts that by law require a special power of attorney, in which case the faculties conferred with their special character shall be set out in detail. In general powers of attorney to administer assets, it shall suffice to state that they are granted with that character, so that the proxy has all administrative faculties. In general powers of attorney to exercise acts of ownership, it shall suffice to express that they are granted with that character, so that the proxy has all the faculties of the owner, in relation to the assets and their defense."',
+      ),
+      spacerRow(),
+      biRow(
+        '"Artículo 2,204.- El mandato debe de formalizarse por escrito, y otorgarse: I. En escritura pública: a) Siempre que sea general; b) Cuando se refiera a inmuebles o a derechos reales; c) Cuando el negocio para el que se confiera, su importe sea superior al equivalente a 300 veces el valor diario de la Unidad de Medida y Actualización; y d) Cuando en virtud de él haya de ejecutar el mandatario algún acto que conforme a la ley deba constar en escritura pública."',
+        '"Article 2,204.- The mandate must be formalized in writing and granted: I. In a public deed: a) Whenever it is general; b) When it refers to real estate or real rights; c) When the business for which it is conferred exceeds an amount equivalent to 300 times the daily value of the Unit of Measurement and Update; and d) When by virtue thereof the agent must execute an act that by law must be recorded in a public deed."',
+      ),
+      spacerRow(),
+      biRow(
+        '"Artículo 2,244.- El mandato podrá ser revocado en todo tiempo y libremente por el mandante o renunciado en igual forma por el mandatario. Cualquier estipulación en contrario será nula de pleno derecho y se tendrá por no puesta. La parte que revoque o renuncie el mandato en tiempo inoportuno, deberá indemnizar a la otra, de los daños y perjuicios que le cause."',
+        '"Article 2,244.- The mandate may be revoked at any time and freely by the principal or renounced in the same way by the agent. Any stipulation to the contrary shall be null and void and shall be deemed not to have been made. The party that revokes or renounces the mandate at an inopportune time must compensate the other party for damages caused."',
+      ),
+      spacerRow(),
+    ] : [
+      headerRow('CÓDIGO CIVIL DEL ESTADO DE NAYARIT', 'CIVIL CODE OF THE STATE OF NAYARIT'),
+      biRow(
+        '"Artículo 1,926.- En todos los poderes generales para pleitos y cobranzas bastará que se diga que se otorgan con todas las facultades generales y las especiales que requieran cláusula especial conforme a la ley, para que se entiendan conferidos sin limitación alguna. En los poderes generales para administrar bienes, bastará expresar que se dan con ese carácter para que el apoderado tenga todas las facultades de dueño, tanto en lo relativo a los bienes, como para hacer toda clase de gestiones, a fin de defenderlos. Cuando se quisieren limitar, en los tres casos antes mencionados, las facultades del apoderado, se consignarán las limitaciones o los poderes serán especiales. Los notarios insertarán este artículo en los testimonios de los poderes que otorguen."',
+        '"Article 1,926.- In all general powers for lawsuits and collections, it will suffice to say that they are granted with all the general and special powers that require a special clause in accordance with the law, so that they are understood to be conferred without any limitation. In the general powers to administer assets, it will suffice to state that they are given in this capacity so that the agent has all the faculties of ownership, both in relation to the assets, and to carry out all kinds of procedures, in order to defend them. When they want to limit, in the three aforementioned cases, the powers of the attorney, the limitations will be recorded or the powers will be special. Notaries will insert this article in the testimonials of the powers they grant."',
+      ),
+      spacerRow(),
+      biRow(
+        '"Artículo 1,927.- El mandato debe otorgarse en escritura pública o en carta poder firmada ante dos testigos ratificadas las firmas del otorgante y testigos ante notario, ante los jueces o autoridades administrativas correspondientes: I.- Cuando sea general; II.- Cuando el interés del negocio para que se confiere sea superior al equivalente a mil veces el salario mínimo general vigente en el estado de Nayarit, al momento de otorgarse; o cuando se requiera para la enajenación de inmuebles. III.- Cuando en virtud de él haya de ejecutar el mandatario a nombre del mandante, algún acto que, conforme a la ley deba constar en instrumento público; y IV.- Para que el mandatario pueda hacer donaciones en nombre o por cuenta del mandante, deberá éste otorgar poder especial en cada caso."',
+        '"Article 1,927.- The mandate must be granted in a public deed or in a power of attorney signed before two witnesses ratified by the signatures of the grantor and witnesses before a notary, before the corresponding judges or administrative authorities: I.- When it is general; II.- When the interest of the business for which it is conferred is greater than the equivalent of one thousand times the general minimum wage in force in the state of Nayarit, at the time it is granted; or when it is required for the alienation of real estate. III.- When by virtue of it the agent has to execute on behalf of the principal, some act that, according to the law must be recorded in a public instrument; and IV.- In order for the agent to make donations in the name or on behalf of the principal, the latter must grant a special power of attorney in each case."',
+      ),
+      spacerRow(),
+    ]),
 
     // CERTIFICACIÓN — condicional según modoProemio
     ...(data.modoProemio === 'notarial' ? [

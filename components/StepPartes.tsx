@@ -1,6 +1,6 @@
 'use client';
 
-import type { PoderData, TipoPoder, ModoProemio } from '@/types/poder';
+import type { PoderData, TipoPoder, ModoProemio, RegimenEstado, Poderdante } from '@/types/poder';
 import { TIPO_PODER_LABELS } from '@/types/poder';
 
 interface Props {
@@ -35,6 +35,34 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
     }
   };
 
+  // ── Múltiples poderdantes ─────────────────────────────────────────
+  // todosLosPoderdantes: el principal + extras
+  const todosLosPoderdantes: Poderdante[] = data.poderdantes?.length > 0
+    ? data.poderdantes
+    : [data.poderdante];
+
+  const updatePoderdanteN = (idx: number, field: string, value: string) => {
+    const lista = [...todosLosPoderdantes];
+    lista[idx] = { ...lista[idx], [field]: value };
+    // El primero siempre es el principal
+    updateData({ poderdante: lista[0], poderdantes: lista });
+  };
+
+  const addPoderdante = () => {
+    const nuevo: Poderdante = {
+      nombre: '', nacionalidad: '', estadoCivil: 'casado', ocupacion: '',
+      domicilio: '', pasaporte: '', fechaNacimiento: '', genero: 'M',
+    };
+    const lista = [...todosLosPoderdantes, nuevo];
+    updateData({ poderdantes: lista });
+  };
+
+  const removePoderdante = (idx: number) => {
+    if (todosLosPoderdantes.length <= 1) return;
+    const lista = todosLosPoderdantes.filter((_, i) => i !== idx);
+    updateData({ poderdante: lista[0], poderdantes: lista });
+  };
+
   const toggleTipo = (t: TipoPoder) => {
     if (tipos.includes(t)) {
       if (tipos.length > 1) {
@@ -62,103 +90,95 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
         Quien otorga el poder (poderdante) y a quién se lo otorga (apoderado/s)
       </p>
 
-      {/* PODERDANTE */}
+      {/* PODERDANTES — multi */}
       <div className="pg-card" style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--pg-gold)', marginBottom: '20px' }}>
-          Poderdante / Grantor
-        </h3>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-          <div>
-            <label className="pg-label">Nombre Completo / Full Name *</label>
-            <input
-              className="pg-input"
-              placeholder="ej. MARJORIE KATHLEEN BRAATZ"
-              value={poderdante.nombre}
-              onChange={(e) => updatePoderdante('nombre', e.target.value.toUpperCase())}
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label className="pg-label">Género / Gender *</label>
-              <select
-                className="pg-select"
-                value={poderdante.genero}
-                onChange={(e) => updatePoderdante('genero', e.target.value)}
-              >
-                <option value="M">Masculino / Male</option>
-                <option value="F">Femenino / Female</option>
-              </select>
-            </div>
-            <div>
-              <label className="pg-label">Nacionalidad / Nationality *</label>
-              <input
-                className="pg-input"
-                placeholder="ej. canadiense / Canadian"
-                value={poderdante.nacionalidad}
-                onChange={(e) => updatePoderdante('nacionalidad', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label className="pg-label">Estado Civil / Civil Status</label>
-              <select
-                className="pg-select"
-                value={poderdante.estadoCivil}
-                onChange={(e) => updatePoderdante('estadoCivil', e.target.value)}
-              >
-                <option value="soltero">Soltero(a) / Single</option>
-                <option value="casado">Casado(a) / Married</option>
-                <option value="divorciado">Divorciado(a) / Divorced</option>
-                <option value="viudo">Viudo(a) / Widowed</option>
-                <option value="union_libre">Unión libre / Common-law</option>
-              </select>
-            </div>
-            <div>
-              <label className="pg-label">Ocupación / Occupation</label>
-              <input
-                className="pg-input"
-                placeholder="ej. Retirado(a) / Retired"
-                value={poderdante.ocupacion}
-                onChange={(e) => updatePoderdante('ocupacion', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label className="pg-label">No. Pasaporte / Passport No. *</label>
-              <input
-                className="pg-input"
-                placeholder="ej. AC536054"
-                value={poderdante.pasaporte}
-                onChange={(e) => updatePoderdante('pasaporte', e.target.value.toUpperCase())}
-              />
-            </div>
-            <div>
-              <label className="pg-label">Fecha Nacimiento / Birth Date</label>
-              <input
-                className="pg-input"
-                placeholder="DD/MM/YYYY"
-                value={poderdante.fechaNacimiento}
-                onChange={(e) => updatePoderdante('fechaNacimiento', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="pg-label">Domicilio / Address *</label>
-            <input
-              className="pg-input"
-              placeholder="ej. Paseo De Los Cocoteros 111, Int 404, Nuevo Vallarta, Bahía de Banderas, Nayarit, 63735"
-              value={poderdante.domicilio}
-              onChange={(e) => updatePoderdante('domicilio', e.target.value)}
-            />
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--pg-gold)' }}>
+            Poderdante(s) / Grantor(s)
+          </h3>
+          {todosLosPoderdantes.length < 4 && (
+            <button onClick={addPoderdante} className="pg-btn-secondary" style={{ fontSize: '12px', padding: '6px 14px' }}>
+              + Agregar poderdante
+            </button>
+          )}
         </div>
+
+        {todosLosPoderdantes.map((pd, idx) => (
+          <div key={idx} style={{
+            marginBottom: idx < todosLosPoderdantes.length - 1 ? '24px' : 0,
+            paddingBottom: idx < todosLosPoderdantes.length - 1 ? '24px' : 0,
+            borderBottom: idx < todosLosPoderdantes.length - 1 ? '1px solid rgba(201,168,76,0.15)' : 'none',
+          }}>
+            {todosLosPoderdantes.length > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--pg-gold)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Poderdante {idx + 1}
+                </span>
+                {idx > 0 && (
+                  <button onClick={() => removePoderdante(idx)} style={{
+                    background: 'rgba(192,57,43,0.15)', border: '1px solid rgba(192,57,43,0.35)',
+                    color: '#E74C3C', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontSize: '12px',
+                  }}>✕ Quitar</button>
+                )}
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px' }}>
+              <div>
+                <label className="pg-label">Nombre Completo / Full Name *</label>
+                <input className="pg-input" placeholder="ej. MARJORIE KATHLEEN BRAATZ"
+                  value={pd.nombre} onChange={(e) => updatePoderdanteN(idx, 'nombre', e.target.value.toUpperCase())} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div>
+                  <label className="pg-label">Género / Gender</label>
+                  <select className="pg-select" value={pd.genero} onChange={(e) => updatePoderdanteN(idx, 'genero', e.target.value)}>
+                    <option value="M">Masculino / Male</option>
+                    <option value="F">Femenino / Female</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="pg-label">Nacionalidad / Nationality</label>
+                  <input className="pg-input" placeholder="ej. Canadian" value={pd.nacionalidad}
+                    onChange={(e) => updatePoderdanteN(idx, 'nacionalidad', e.target.value)} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div>
+                  <label className="pg-label">Estado Civil</label>
+                  <select className="pg-select" value={pd.estadoCivil} onChange={(e) => updatePoderdanteN(idx, 'estadoCivil', e.target.value)}>
+                    <option value="soltero">Soltero(a) / Single</option>
+                    <option value="casado">Casado(a) / Married</option>
+                    <option value="divorciado">Divorciado(a) / Divorced</option>
+                    <option value="viudo">Viudo(a) / Widowed</option>
+                    <option value="union_libre">Unión libre</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="pg-label">Ocupación / Occupation</label>
+                  <input className="pg-input" placeholder="ej. Retired" value={pd.ocupacion}
+                    onChange={(e) => updatePoderdanteN(idx, 'ocupacion', e.target.value)} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div>
+                  <label className="pg-label">No. Pasaporte / Passport No.</label>
+                  <input className="pg-input" placeholder="ej. AC536054" value={pd.pasaporte}
+                    onChange={(e) => updatePoderdanteN(idx, 'pasaporte', e.target.value.toUpperCase())} />
+                </div>
+                <div>
+                  <label className="pg-label">Fecha Nacimiento / Birth Date</label>
+                  <input className="pg-input" placeholder="DD/MM/YYYY" value={pd.fechaNacimiento}
+                    onChange={(e) => updatePoderdanteN(idx, 'fechaNacimiento', e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="pg-label">Domicilio / Address</label>
+                <input className="pg-input" placeholder="Dirección completa" value={pd.domicilio}
+                  onChange={(e) => updatePoderdanteN(idx, 'domicilio', e.target.value)} />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* APODERADOS */}
@@ -234,6 +254,29 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
               </label>
             );
           })}
+        </div>
+      </div>
+
+      {/* RÉGIMEN LEGAL ESTATAL */}
+      <div className="pg-card" style={{ marginBottom: '24px' }}>
+        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--pg-gold)', marginBottom: '8px' }}>
+          Código Civil Aplicable
+        </h3>
+        <p style={{ fontSize: '12px', color: 'rgba(245,240,232,0.5)', marginBottom: '14px' }}>
+          Estado donde se ubica el inmueble — determina qué artículos del régimen legal se insertan en el documento.
+        </p>
+        <select
+          className="pg-select"
+          value={data.regimenEstado}
+          onChange={(e) => updateData({ regimenEstado: e.target.value as RegimenEstado })}
+        >
+          <option value="nayarit">Nayarit — Arts. 1,926 y 1,927 CC Nayarit (Bahía de Banderas, Bucerías, Sayulita…)</option>
+          <option value="jalisco">Jalisco — Arts. 2,207 y 2,204 CC Jalisco (Puerto Vallarta, Mascota…)</option>
+        </select>
+        <div style={{ fontSize: '11px', color: 'rgba(201,168,76,0.6)', marginTop: '8px' }}>
+          {data.regimenEstado === 'jalisco'
+            ? '⚖ Art. 2,207 CCJ + Art. 2,554 CCF + Art. 2,244 CCJ'
+            : '⚖ Art. 1,926 CC Nayarit + Art. 1,927 CC Nayarit + Arts. 2,554/2,555/2,596 CCF'}
         </div>
       </div>
 
