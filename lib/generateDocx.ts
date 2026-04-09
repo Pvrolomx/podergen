@@ -13,6 +13,9 @@ import {
   convertInchesToTwip,
   PageOrientation,
   ShadingType,
+  Footer,
+  PageNumber,
+  NumberFormat,
 } from 'docx';
 import type { PoderData, Facultades } from '@/types/poder';
 import { buildConcordancia, buildApoderadosTexto, buildCertificacionTextos, buildPoderdantesStr, getGeneroGrupo, esMultiple } from '@/lib/concordancia';
@@ -112,8 +115,8 @@ function headerRow(esTitle: string, enTitle: string): TableRow {
       width: { size: 50, type: WidthType.PERCENTAGE },
       shading: { type: ShadingType.SOLID, color: 'C9A84C', fill: 'C9A84C' },
       borders: {
-        top: { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' },
-        bottom: { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' },
+        top: { style: BorderStyle.NONE, size: 0 },
+        bottom: { style: BorderStyle.NONE, size: 0 },
         left: { style: BorderStyle.NONE, size: 0 },
         right: { style: BorderStyle.SINGLE, size: 6, color: '8B6914' },
       },
@@ -665,7 +668,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       bottom: { style: BorderStyle.SINGLE, size: 12, color: 'C9A84C' },
       left: { style: BorderStyle.SINGLE, size: 12, color: 'C9A84C' },
       right: { style: BorderStyle.SINGLE, size: 12, color: 'C9A84C' },
-
+      insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+      insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
     },
     rows: [...rows, ...sigRows],
   });
@@ -698,6 +702,29 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     ],
   });
 
+  const pageFooter = new Footer({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({ text: 'Página ', size: 16, font: 'Times New Roman', color: '888888' }),
+          new TextRun({ children: [PageNumber.CURRENT], size: 16, font: 'Times New Roman', color: '888888' }),
+          new TextRun({ text: ' de ', size: 16, font: 'Times New Roman', color: '888888' }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, font: 'Times New Roman', color: '888888' }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: 'PoderGen — podergen.expatadvisormx.com | Expat Advisor MX',
+            size: 14, color: '999999', font: 'Times New Roman', italics: true,
+          }),
+        ],
+      }),
+    ],
+  });
+
   const doc = new Document({
     sections: [
       {
@@ -706,12 +733,13 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
             margin: {
               top: convertInchesToTwip(0.75),
               right: convertInchesToTwip(0.75),
-              bottom: convertInchesToTwip(0.75),
+              bottom: convertInchesToTwip(0.85),
               left: convertInchesToTwip(0.75),
             },
           },
         },
-        children: [titlePara, mainTable, footerPara],
+        footers: { default: pageFooter },
+        children: [mainTable],
       },
     ],
   });
