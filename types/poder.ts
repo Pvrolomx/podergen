@@ -159,7 +159,7 @@ export const ESTADO_CIVIL_LABELS: Record<EstadoCivil, { es: string; en: string }
 export const TIPO_PODER_LABELS: Record<TipoPoder, { es: string; en: string }> = {
   pleitos_cobranzas: { es: 'PODER PARA PLEITOS Y COBRANZAS', en: 'POWER OF ATTORNEY FOR LAWSUITS AND COLLECTIONS' },
   administracion: { es: 'ACTOS DE ADMINISTRACIÓN', en: 'ACTS OF ADMINISTRATION' },
-  dominio: { es: 'DOMINIO LIMITADO', en: 'LIMITED DOMAIN' },
+  dominio: { es: 'ACTOS DE DOMINIO LIMITADO', en: 'LIMITED ACTS OF DOMAIN' },
 };
 
 export const FACULTADES_LABELS: Record<keyof Facultades, { es: string; en: string }> = {
