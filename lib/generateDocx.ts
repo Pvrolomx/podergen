@@ -723,15 +723,6 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
           new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, font: 'Times New Roman', color: '888888' }),
         ],
       }),
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        children: [
-          new TextRun({
-            text: 'PoderGen — podergen.expatadvisormx.com | Expat Advisor MX',
-            size: 14, color: '999999', font: 'Times New Roman', italics: true,
-          }),
-        ],
-      }),
     ],
   });
 
