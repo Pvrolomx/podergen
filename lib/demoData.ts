@@ -1,0 +1,47 @@
+import type { PoderData } from '@/types/poder';
+
+export const DEMO_PODER: PoderData = {
+  poderdante: {
+    nombre: 'MARJORIE KATHLEEN BRAATZ',
+    nacionalidad: 'Canadian',
+    estadoCivil: 'casado',
+    ocupacion: 'Retired',
+    domicilio: 'Paseo De Los Cocoteros 111, Int 404, Nuevo Vallarta, Bahía de Banderas, Nayarit, 63735',
+    pasaporte: 'AC536054',
+    fechaNacimiento: '29/03/1962',
+    genero: 'F',
+  },
+  apoderados: [
+    { nombre: 'ROLANDO ROMERO GARCÍA' },
+    { nombre: 'CLAUDIA REBECA CASTILLO SOTO' },
+  ],
+  inmueble: {
+    descripcion: 'Departamento 404, tipo "C-PH", ubicado en cuarto nivel, del condominio Nitta Nuevo Vallarta, en avenida Paseo de los Cocoteros número 111 norte, Fraccionamiento náutico turístico Nuevo Vallarta, Bahía de Banderas, Nayarit, Código Postal 63735. Área cubierta: 123.8003 m². Área terraza descubierta: 2.1410 m². Área de pergolado: 17.7273 m². Área de terraza y alberca: 60.7026 m². Área total: 204.3712 m². % de indiviso: 2.293%. Consta de: área de lavandería, pasillo distribuidor, área de pergolado, área de terraza y alberca, área de equipo aire acondicionado, cocina, sala comedor, terraza, 1 recámara con baño, vestidor y terraza, 1 recámara con baño y terraza. Estacionamiento 404. Bodega 404.',
+    fideicomisoNumero: '751699',
+    bancoFiduciario: 'BANCO MERCANTIL DEL NORTE, SOCIEDAD ANÓNIMA, INSTITUCIÓN DE BANCA MÚLTIPLE, GRUPO FINANCIERO BANORTE, DIVISIÓN FIDUCIARIA',
+    cuentaPredial: 'U016345',
+    departamento: 'Departamento 404, tipo C-PH',
+    nombreCondominio: 'Nitta Nuevo Vallarta',
+    direccion: 'Av. Paseo de los Cocoteros 111 Norte',
+    municipio: 'Bahía de Banderas',
+    estado: 'Nayarit',
+    cp: '63735',
+  },
+  tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
+  facultades: {
+    adquirirDerechos: true,
+    darInstrucciones: true,
+    enajenar: true,
+    cederDerechos: true,
+    donaciones: false,
+    conveniosModificatorios: true,
+    ejecucionAmpliaFideicomiso: true,
+    ratificarInstrumentoPublico: true,
+    otorgarFiniquito: true,
+    firmarDocumentos: true,
+    escrow: true,
+    isr: true,
+  },
+  lugar: '',
+  fecha: '',
+};

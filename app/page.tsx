@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { PoderData } from '@/types/poder';
 import { DEFAULT_PODER } from '@/types/poder';
+import { DEMO_PODER } from '@/lib/demoData';
 import StepPartes from '@/components/StepPartes';
 import StepInmueble from '@/components/StepInmueble';
 import StepFacultades from '@/components/StepFacultades';
@@ -18,6 +19,7 @@ const STEPS = [
 export default function Home() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<PoderData>(DEFAULT_PODER);
+  const [isDemo, setIsDemo] = useState(false);
 
   const updateData = (partial: Partial<PoderData>) => {
     setData((prev) => ({ ...prev, ...partial }));
@@ -27,21 +29,34 @@ export default function Home() {
   const prev = () => setStep((s) => Math.max(s - 1, 1));
   const goTo = (n: number) => { if (n < step) setStep(n); };
 
+  const loadDemo = () => {
+    setData(DEMO_PODER);
+    setIsDemo(true);
+    setStep(4); // saltar directo al preview
+  };
+
+  const resetForm = () => {
+    setData(DEFAULT_PODER);
+    setIsDemo(false);
+    setStep(1);
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <header style={{
         background: 'rgba(10,22,40,0.98)',
         borderBottom: '1px solid rgba(201,168,76,0.3)',
-        padding: '16px 24px',
+        padding: '14px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
         zIndex: 100,
+        gap: '16px',
       }}>
-        <div>
+        <div style={{ flex: 1 }}>
           <div style={{
             fontSize: '22px',
             fontWeight: 'bold',
@@ -56,11 +71,87 @@ export default function Home() {
             Expat Advisor MX — Poderes Notariales Bilingüe
           </div>
         </div>
-        <div style={{ fontSize: '12px', color: 'rgba(245,240,232,0.4)', textAlign: 'right' }}>
+
+        {/* Demo button + Reset */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {isDemo && (
+            <button
+              onClick={resetForm}
+              style={{
+                padding: '7px 14px',
+                fontSize: '12px',
+                background: 'transparent',
+                border: '1px solid rgba(245,240,232,0.2)',
+                borderRadius: '4px',
+                color: 'rgba(245,240,232,0.5)',
+                cursor: 'pointer',
+                fontFamily: 'Times New Roman, serif',
+                letterSpacing: '0.05em',
+              }}
+            >
+              ✕ Limpiar
+            </button>
+          )}
+          <button
+            onClick={loadDemo}
+            style={{
+              padding: '8px 18px',
+              fontSize: '13px',
+              background: isDemo
+                ? 'rgba(201,168,76,0.15)'
+                : 'linear-gradient(135deg, rgba(201,168,76,0.25) 0%, rgba(201,168,76,0.1) 100%)',
+              border: '1px solid rgba(201,168,76,0.5)',
+              borderRadius: '4px',
+              color: '#C9A84C',
+              cursor: 'pointer',
+              fontFamily: 'Times New Roman, serif',
+              fontWeight: 'bold',
+              letterSpacing: '0.06em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ▶ Demo
+          </button>
+        </div>
+
+        <div style={{ fontSize: '12px', color: 'rgba(245,240,232,0.4)', textAlign: 'right', display: 'none' }}>
           <div>expatadvisormx.com</div>
-          <div>Puerto Vallarta · México</div>
         </div>
       </header>
+
+      {/* Demo banner */}
+      {isDemo && (
+        <div style={{
+          background: 'linear-gradient(90deg, rgba(201,168,76,0.18) 0%, rgba(201,168,76,0.08) 100%)',
+          borderBottom: '1px solid rgba(201,168,76,0.35)',
+          padding: '10px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '16px' }}>👁</span>
+            <div>
+              <span style={{ fontSize: '13px', color: 'var(--pg-gold)', fontWeight: 'bold' }}>
+                Modo Demo
+              </span>
+              <span style={{ fontSize: '12px', color: 'rgba(245,240,232,0.6)', marginLeft: '10px' }}>
+                Caso real: Marjorie Braatz → NITTA 404, Fideicomiso 751699 Banorte
+              </span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => setStep(1)} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '3px', background: 'transparent', color: 'rgba(245,240,232,0.6)', cursor: 'pointer' }}>Paso 1</button>
+            <button onClick={() => setStep(2)} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '3px', background: 'transparent', color: 'rgba(245,240,232,0.6)', cursor: 'pointer' }}>Paso 2</button>
+            <button onClick={() => setStep(3)} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '3px', background: 'transparent', color: 'rgba(245,240,232,0.6)', cursor: 'pointer' }}>Paso 3</button>
+            <button onClick={() => setStep(4)} style={{ padding: '4px 10px', fontSize: '11px', border: '1px solid rgba(201,168,76,0.4)', borderRadius: '3px', background: 'rgba(201,168,76,0.15)', color: 'var(--pg-gold)', cursor: 'pointer', fontWeight: 'bold' }}>Preview ▶</button>
+          </div>
+        </div>
+      )}
 
       {/* Step Indicator */}
       <div style={{
