@@ -47,6 +47,7 @@ export const DEMO_PODER: PoderData = {
     cp: '63735',
   },
   tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
+  modoProemio: 'notarial' as const,
   facultades: {
     adquirirDerechos: true,
     darInstrucciones: true,

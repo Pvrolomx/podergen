@@ -1,8 +1,7 @@
 'use client';
 
-import type { PoderData } from '@/types/poder';
+import type { PoderData, TipoPoder, ModoProemio } from '@/types/poder';
 import { TIPO_PODER_LABELS } from '@/types/poder';
-import type { TipoPoder } from '@/types/poder';
 
 interface Props {
   data: PoderData;
@@ -235,6 +234,58 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
               </label>
             );
           })}
+        </div>
+      </div>
+
+      {/* MODO PROEMIO */}
+      <div className="pg-card" style={{ marginBottom: '32px' }}>
+        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--pg-gold)', marginBottom: '8px' }}>
+          Modo del Proemio / Opening Clause
+        </h3>
+        <p style={{ fontSize: '12px', color: 'rgba(245,240,232,0.5)', marginBottom: '16px', lineHeight: '1.6' }}>
+          ¿El poder es redactado y certificado por un Notario Público mexicano, o es firmado directamente por el otorgante ante un notario extranjero?
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Opción Notarial */}
+          <label
+            onClick={() => updateData({ modoProemio: 'notarial' })}
+            className={`pg-checkbox-item ${data.modoProemio === 'notarial' ? 'checked' : ''}`}
+            style={{ cursor: 'pointer', alignItems: 'flex-start' }}
+          >
+            <input type="radio" checked={data.modoProemio === 'notarial'} onChange={() => updateData({ modoProemio: 'notarial' })} style={{ marginTop: '3px', accentColor: 'var(--pg-gold)' }} />
+            <span className="pg-checkbox-label">
+              <span style={{ fontWeight: 'bold', color: data.modoProemio === 'notarial' ? 'var(--pg-cream)' : 'rgba(245,240,232,0.6)' }}>
+                Notarial MX (estándar)
+              </span>
+              <span style={{ display: 'block', fontSize: '11px', color: 'rgba(245,240,232,0.4)', marginTop: '3px', fontStyle: 'italic' }}>
+                "El Notario Público que autoriza, certifica: que ante mí compareció NOMBRE, a fin de..."
+              </span>
+              <span style={{ display: 'block', fontSize: '11px', color: 'rgba(245,240,232,0.35)', marginTop: '1px' }}>
+                Incluye certificación notarial completa (puntos I–IV, leído, firma con sello)
+              </span>
+            </span>
+          </label>
+
+          {/* Opción Suscrito */}
+          <label
+            onClick={() => updateData({ modoProemio: 'suscrito' })}
+            className={`pg-checkbox-item ${data.modoProemio === 'suscrito' ? 'checked' : ''}`}
+            style={{ cursor: 'pointer', alignItems: 'flex-start' }}
+          >
+            <input type="radio" checked={data.modoProemio === 'suscrito'} onChange={() => updateData({ modoProemio: 'suscrito' })} style={{ marginTop: '3px', accentColor: 'var(--pg-gold)' }} />
+            <span className="pg-checkbox-label">
+              <span style={{ fontWeight: 'bold', color: data.modoProemio === 'suscrito' ? 'var(--pg-cream)' : 'rgba(245,240,232,0.6)' }}>
+                Suscrito (notario extranjero / simplificado)
+              </span>
+              <span style={{ display: 'block', fontSize: '11px', color: 'rgba(245,240,232,0.4)', marginTop: '3px', fontStyle: 'italic' }}>
+                "Los suscritos / La suscrita NOMBRE, comparecemos/comparezco a fin de..."
+              </span>
+              <span style={{ display: 'block', fontSize: '11px', color: 'rgba(245,240,232,0.35)', marginTop: '1px' }}>
+                Sin certificación notarial extensa — solo sección de firma y sello
+              </span>
+            </span>
+          </label>
         </div>
       </div>
 

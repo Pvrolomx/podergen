@@ -2,6 +2,7 @@ export type Genero = 'M' | 'F';
 export type EstadoCivil = 'soltero' | 'casado' | 'divorciado' | 'viudo' | 'union_libre';
 export type TipoPoder = 'pleitos_cobranzas' | 'administracion' | 'dominio';
 export type ModoTitulo = 'fideicomiso' | 'escritura';
+export type ModoProemio = 'notarial' | 'suscrito';
 
 export interface Poderdante {
   nombre: string;
@@ -72,6 +73,7 @@ export interface PoderData {
   inmueble: Inmueble;
   tipos: TipoPoder[];
   facultades: Facultades;
+  modoProemio: ModoProemio;  // 'notarial' | 'suscrito'
   lugar?: string;
   fecha?: string;
 }
@@ -117,6 +119,7 @@ export const DEFAULT_PODER: PoderData = {
     rppSeccionJal: '',
   },
   tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
+  modoProemio: 'notarial',
   facultades: {
     adquirirDerechos: true,
     darInstrucciones: true,
