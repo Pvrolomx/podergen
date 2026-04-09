@@ -15,6 +15,7 @@ import {
   ShadingType,
 } from 'docx';
 import type { PoderData, Facultades } from '@/types/poder';
+import { buildConcordancia, buildApoderadosTexto, buildCertificacionTextos } from '@/lib/concordancia';
 import {
   ESTADO_CIVIL_LABELS,
   TIPO_PODER_LABELS,
@@ -133,6 +134,7 @@ function spacerRow(): TableRow {
   });
 }
 
+// apoderadosStr ahora viene del motor de concordancia
 function buildPoderTitulo(data: PoderData): string {
   const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].es).join(', ');
   return `PODER PARA ${tipos}`.replace('PODER PARA PODER PARA', 'PODER PARA');
@@ -145,13 +147,6 @@ function buildPoderTituloEN(data: PoderData): string {
 
 function getEstadoCivil(data: PoderData): { es: string; en: string } {
   return ESTADO_CIVIL_LABELS[data.poderdante.estadoCivil];
-}
-
-function buildApoderadosStr(apoderados: { nombre: string }[]): string {
-  if (apoderados.length === 1) return apoderados[0].nombre;
-  if (apoderados.length === 2)
-    return `${apoderados[0].nombre} y/o ${apoderados[1].nombre}`;
-  return apoderados.map((a) => a.nombre).join(', ');
 }
 
 function buildFacultadesText(facultades: Facultades): { es: string; en: string } {
@@ -170,11 +165,12 @@ function buildFacultadesText(facultades: Facultades): { es: string; en: string }
 }
 
 export async function generatePoderDocx(data: PoderData): Promise<Blob> {
-  const apoderadosStr = buildApoderadosStr(data.apoderados);
+  const c = buildConcordancia(data);
+  const apoderadosStr = buildApoderadosTexto(data);
+  const ct = buildCertificacionTextos(data, c);
   const tipoES = buildPoderTitulo(data);
   const tipoEN = buildPoderTituloEN(data);
-  const ecES = getEstadoCivil(data).es;
-  const ecEN = getEstadoCivil(data).en;
+  // ecES/ecEN ahora manejados por el motor de concordancia
   const facultadesText = buildFacultadesText(data.facultades);
 
   // Full property description
@@ -257,11 +253,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
 
   const rows: TableRow[] = [
     // ===== INTRO =====
-    biRow(
-      `El Notario Público que autoriza, certifica: que ante mí compareció ${data.poderdante.nombre.toUpperCase()}, a fin de:`,
-      `The Notary Public who authorizes certifies that: ${data.poderdante.nombre.toUpperCase()}, appeared before me to:`,
-      { center: false }
-    ),
+    biRow(ct.compareció_ES, ct.compareció_EN, { center: false }),
     spacerRow(),
     biRow('HACER CONSTAR:', 'RECORD:', { bold: true, center: true }),
     spacerRow(),
@@ -352,27 +344,12 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     headerRow('CERTIFICACIÓN NOTARIAL', 'NOTARIAL CERTIFICATION'),
     biRow('Yo, el Notario Certifico y doy fe:', 'I, the Notary, Certify and attest:', { bold: true }),
     spacerRow(),
-    biRow(
-      `I.- Que conozco personalmente a la otorgante del presente instrumento y que tiene la capacidad legal para otorgar este documento.`,
-      `I.- That I personally know the grantor of this instrument and that she has legal capacity to grant this document.`,
-    ),
-    biRow(
-      `II.- Que la otorgante se identifica ante mí con Pasaporte ${data.poderdante.nacionalidad} número: ${data.poderdante.pasaporte}, nacida el día ${data.poderdante.fechaNacimiento}.`,
-      `II.- That the appearing party identified herself with her ${data.poderdante.nacionalidad} Passport number: ${data.poderdante.pasaporte}, born ${data.poderdante.fechaNacimiento}.`,
-    ),
-    biRow(
-      `III.- Que por sus generales la compareciente, bajo protesta de decir verdad, manifiesta ser:\na. Mayor de edad.\nb. ${ecES}.\nc. ${data.poderdante.ocupacion}.\nd. De nacionalidad ${data.poderdante.nacionalidad}.\ne. Domicilio: ${data.poderdante.domicilio}.`,
-      `III.- That as her general information, the appearing party stated to be:\na. Of Legal Age.\nb. ${ecEN}.\nc. ${data.poderdante.ocupacion}.\nd. ${data.poderdante.nacionalidad} Nationality.\ne. Address: ${data.poderdante.domicilio}.`,
-    ),
-    biRow(
-      'IV.- Que este instrumento se otorga en los idiomas inglés y español y que manifestó expresamente la parte otorgante que por este medio aprueba la versión en español, ya que éste es una traducción fiel y correcta en todos sus términos, de la versión en inglés.',
-      'IV.- That this instrument is granted in the Spanish and the English languages and that the grantor expressly manifests through this means that she approves of the Spanish version, because it is a true and correct translation in all of its terms, of the English version.',
-    ),
+    biRow(ct.puntoI_ES, ct.puntoI_EN),
+    biRow(ct.puntoII_ES, ct.puntoII_EN),
+    biRow(ct.puntoIII_ES, ct.puntoIII_EN),
+    biRow(ct.puntoIV_ES, ct.puntoIV_EN),
     spacerRow(),
-    biRow(
-      'Leído que fue por mí, el Notario, el Instrumento que antecede a la otorgante y previa explicación y advertencia que le hice sobre su validez, alcance y consecuencias legales, se manifestó conforme con su contenido y lo ratifica y firma ante mí.',
-      'This instrument read by me, the Notary, to the grantor and previous explanation and warnings I made about its validity, scope and legal consequences, she stated her agreement to its contents, ratified, and signed it before me.',
-    ),
+    biRow(ct.leido_ES, ct.leido_EN),
     spacerRow(),
     spacerRow(),
 
@@ -522,7 +499,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
               alignment: AlignmentType.CENTER,
               children: [
                 new TextRun({
-                  text: 'Poderdante / Grantor',
+                  text: `${c.elLa.charAt(0).toUpperCase() + c.elLa.slice(1)} Poderdante / Grantor`,
                   size: 16,
                   font: 'Times New Roman',
                 }),
