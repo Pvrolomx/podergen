@@ -1,6 +1,7 @@
 export type Genero = 'M' | 'F';
 export type EstadoCivil = 'soltero' | 'casado' | 'divorciado' | 'viudo' | 'union_libre';
 export type TipoPoder = 'pleitos_cobranzas' | 'administracion' | 'dominio';
+export type ModoTitulo = 'fideicomiso' | 'escritura';
 
 export interface Poderdante {
   nombre: string;
@@ -9,7 +10,7 @@ export interface Poderdante {
   ocupacion: string;
   domicilio: string;
   pasaporte: string;
-  fechaNacimiento: string; // DD/MM/YYYY
+  fechaNacimiento: string;
   genero: Genero;
 }
 
@@ -18,11 +19,18 @@ export interface Apoderado {
 }
 
 export interface Inmueble {
+  modo: ModoTitulo;
   descripcion: string;
   fideicomisoNumero: string;
   bancoFiduciario: string;
   cuentaPredial: string;
-  // Parsed fields for display
+  escrituraNumero: string;
+  escrituraFecha: string;
+  escrituraNotario: string;
+  escrituraNotaria: string;
+  escrituraVolumen: string;
+  escrituraFolio: string;
+  escrituraRPP: string;
   nombreCondominio?: string;
   departamento?: string;
   direccion?: string;
@@ -72,10 +80,18 @@ export const DEFAULT_PODER: PoderData = {
     { nombre: 'CLAUDIA REBECA CASTILLO SOTO' },
   ],
   inmueble: {
+    modo: 'fideicomiso',
     descripcion: '',
     fideicomisoNumero: '',
     bancoFiduciario: '',
     cuentaPredial: '',
+    escrituraNumero: '',
+    escrituraFecha: '',
+    escrituraNotario: '',
+    escrituraNotaria: '',
+    escrituraVolumen: '',
+    escrituraFolio: '',
+    escrituraRPP: '',
   },
   tipos: ['pleitos_cobranzas', 'administracion', 'dominio'],
   facultades: {
@@ -105,67 +121,22 @@ export const ESTADO_CIVIL_LABELS: Record<EstadoCivil, { es: string; en: string }
 };
 
 export const TIPO_PODER_LABELS: Record<TipoPoder, { es: string; en: string }> = {
-  pleitos_cobranzas: {
-    es: 'PODER PARA PLEITOS Y COBRANZAS',
-    en: 'POWER OF ATTORNEY FOR LAWSUITS AND COLLECTIONS',
-  },
-  administracion: {
-    es: 'ACTOS DE ADMINISTRACIÓN',
-    en: 'ACTS OF ADMINISTRATION',
-  },
-  dominio: {
-    es: 'DOMINIO LIMITADO',
-    en: 'LIMITED DOMAIN',
-  },
+  pleitos_cobranzas: { es: 'PODER PARA PLEITOS Y COBRANZAS', en: 'POWER OF ATTORNEY FOR LAWSUITS AND COLLECTIONS' },
+  administracion: { es: 'ACTOS DE ADMINISTRACIÓN', en: 'ACTS OF ADMINISTRATION' },
+  dominio: { es: 'DOMINIO LIMITADO', en: 'LIMITED DOMAIN' },
 };
 
 export const FACULTADES_LABELS: Record<keyof Facultades, { es: string; en: string }> = {
-  adquirirDerechos: {
-    es: 'Adquirir derechos y obligaciones fideicomisarios',
-    en: 'Acquire trust rights and obligations',
-  },
-  darInstrucciones: {
-    es: 'Girar instrucciones al Fiduciario',
-    en: 'Give instructions to the Trustee',
-  },
-  enajenar: {
-    es: 'Llevar a cabo enajenaciones o cualquier acto traslativo de dominio',
-    en: 'Perform transfers of property or any act of conveyance',
-  },
-  cederDerechos: {
-    es: 'Cesiones de derechos fideicomisarios',
-    en: 'Transfer of trust rights',
-  },
-  donaciones: {
-    es: 'Realizar donaciones',
-    en: 'Make donations',
-  },
-  conveniosModificatorios: {
-    es: 'Realizar convenios modificatorios',
-    en: 'Subscribe addendums and amendments',
-  },
-  ejecucionAmpliaFideicomiso: {
-    es: 'Ejecución o ampliación del fideicomiso',
-    en: 'Execution or extension of the trust',
-  },
-  ratificarInstrumentoPublico: {
-    es: 'Ratificar y comparecer en instrumento público',
-    en: 'Ratify and sign in a public deed',
-  },
-  otorgarFiniquito: {
-    es: 'Otorgar finiquito al fiduciario',
-    en: 'Hold the trustee harmless',
-  },
-  firmarDocumentos: {
-    es: 'Firmar documentos públicos o privados ante cualquier persona física, moral, autoridad o fedatario',
-    en: 'Sign public or private documents before any person, corporation, authority or notary public',
-  },
-  escrow: {
-    es: 'Suscribir los formatos necesarios ante la empresa escrow correspondiente',
-    en: 'Sign the necessary forms with the corresponding escrow company',
-  },
-  isr: {
-    es: 'Solicitar el cálculo, la exención y deducción en términos de la Ley del ISR',
-    en: 'Request estimate, exemption and deduction pursuant to the Capital Gains Tax Law',
-  },
+  adquirirDerechos: { es: 'Adquirir derechos y obligaciones fideicomisarios', en: 'Acquire trust rights and obligations' },
+  darInstrucciones: { es: 'Girar instrucciones al Fiduciario', en: 'Give instructions to the Trustee' },
+  enajenar: { es: 'Llevar a cabo enajenaciones o cualquier acto traslativo de dominio', en: 'Perform transfers of property or any act of conveyance' },
+  cederDerechos: { es: 'Cesiones de derechos fideicomisarios', en: 'Transfer of trust rights' },
+  donaciones: { es: 'Realizar donaciones', en: 'Make donations' },
+  conveniosModificatorios: { es: 'Realizar convenios modificatorios', en: 'Subscribe addendums and amendments' },
+  ejecucionAmpliaFideicomiso: { es: 'Ejecución o ampliación del fideicomiso', en: 'Execution or extension of the trust' },
+  ratificarInstrumentoPublico: { es: 'Ratificar y comparecer en instrumento público', en: 'Ratify and sign in a public deed' },
+  otorgarFiniquito: { es: 'Otorgar finiquito al fiduciario', en: 'Hold the trustee harmless' },
+  firmarDocumentos: { es: 'Firmar documentos públicos o privados ante cualquier persona física, moral, autoridad o fedatario', en: 'Sign public or private documents before any person, corporation, authority or notary public' },
+  escrow: { es: 'Suscribir los formatos necesarios ante la empresa escrow correspondiente', en: 'Sign the necessary forms with the corresponding escrow company' },
+  isr: { es: 'Solicitar el cálculo, la exención y deducción en términos de la Ley del ISR', en: 'Request estimate, exemption and deduction pursuant to the Capital Gains Tax Law' },
 };

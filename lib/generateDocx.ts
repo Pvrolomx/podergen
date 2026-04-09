@@ -180,7 +180,42 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   // Full property description
   const inmuebleDesc =
     data.inmueble.descripcion ||
-    `${data.inmueble.departamento || ''}, ${data.inmueble.nombreCondominio || ''}, ${data.inmueble.direccion || ''}, ${data.inmueble.municipio || ''}, ${data.inmueble.estado || ''} C.P. ${data.inmueble.cp || ''}`.trim();
+    [data.inmueble.departamento, data.inmueble.nombreCondominio, data.inmueble.direccion, 
+     data.inmueble.municipio, data.inmueble.estado, data.inmueble.cp ? `C.P. ${data.inmueble.cp}` : '']
+    .filter(Boolean).join(', ');
+
+  // Párrafo de escritura (solo modo escritura)
+  const buildEscrituraParrafoES = (): string => {
+    const i = data.inmueble;
+    if (!i.escrituraNumero && !i.escrituraNotario) return '';
+    let txt = `El inmueble consta en Escritura Pública número ${i.escrituraNumero || '___'}`;
+    if (i.escrituraFecha) txt += `, de fecha ${i.escrituraFecha}`;
+    if (i.escrituraNotario) txt += `, otorgada ante el Licenciado ${i.escrituraNotario}`;
+    if (i.escrituraNotaria) txt += `, Notario Público ${i.escrituraNotaria}`;
+    if (i.escrituraVolumen) txt += `, Volumen ${i.escrituraVolumen}`;
+    if (i.escrituraFolio) txt += `, Folio ${i.escrituraFolio}`;
+    if (i.escrituraRPP) txt += `. Inscrita en el Registro Público de la Propiedad bajo ${i.escrituraRPP}`;
+    return txt + '.';
+  };
+
+  const buildEscrituraParrafoEN = (): string => {
+    const i = data.inmueble;
+    if (!i.escrituraNumero && !i.escrituraNotario) return '';
+    let txt = `The property is described in Public Deed number ${i.escrituraNumero || '___'}`;
+    if (i.escrituraFecha) txt += `, dated ${i.escrituraFecha}`;
+    if (i.escrituraNotario) txt += `, executed before Notary ${i.escrituraNotario}`;
+    if (i.escrituraNotaria) txt += `, Notary Public ${i.escrituraNotaria}`;
+    if (i.escrituraVolumen) txt += `, Volume ${i.escrituraVolumen}`;
+    if (i.escrituraFolio) txt += `, Folio ${i.escrituraFolio}`;
+    if (i.escrituraRPP) txt += `. Registered at the Public Registry of Property under ${i.escrituraRPP}`;
+    return txt + '.';
+  };
+
+  const esFideicomiso = data.inmueble.modo === 'fideicomiso';
+  const predialES = data.inmueble.cuentaPredial ? ` A dicho INMUEBLE le corresponde la cuenta predial ${data.inmueble.cuentaPredial}.` : '';
+  const predialEN = data.inmueble.cuentaPredial ? ` To said PROPERTY corresponds Property Account No. ${data.inmueble.cuentaPredial}.` : '';
+  const escrituraES = !esFideicomiso ? buildEscrituraParrafoES() : '';
+  const escrituraEN = !esFideicomiso ? buildEscrituraParrafoEN() : '';
 
   const rows: TableRow[] = [
     // ===== INTRO =====
@@ -213,14 +248,18 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // SEGUNDA
     headerRow('SEGUNDA.- LIMITACIÓN', 'SECOND.- LIMITATION'),
     biRow(
-      `El presente poder se otorga de forma limitada sobre el siguiente bien inmueble, contenido en el Fideicomiso identificado administrativamente con el número ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`,
-      `This power is granted in a limited manner over the following property, contained in the trust identified administratively under number ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`,
+      esFideicomiso
+        ? `El presente poder se otorga de forma limitada sobre el siguiente bien inmueble, contenido en el Fideicomiso identificado administrativamente con el número ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`
+        : 'El presente poder se otorga de forma limitada sobre el siguiente bien inmueble de propiedad del poderdante:',
+      esFideicomiso
+        ? `This power is granted in a limited manner over the following property, contained in the trust identified administratively under number ${data.inmueble.fideicomisoNumero}${data.inmueble.bancoFiduciario ? `, ${data.inmueble.bancoFiduciario}` : ''}:`
+        : 'This power is granted in a limited manner over the following property owned by the grantor:',
     ),
     spacerRow(),
     biRow('INMUEBLE:', 'PROPERTY:', { bold: true, center: true, shade: true }),
     biRow(
-      inmuebleDesc + (data.inmueble.cuentaPredial ? ` A dicho INMUEBLE le corresponde la cuenta predial ${data.inmueble.cuentaPredial}. EN ADELANTE EL INMUEBLE.` : ' EN ADELANTE EL INMUEBLE.'),
-      inmuebleDesc + (data.inmueble.cuentaPredial ? ` To said PROPERTY corresponds Property Account No. ${data.inmueble.cuentaPredial}. HEREINAFTER THE PROPERTY.` : ' HEREINAFTER THE PROPERTY.'),
+      inmuebleDesc + predialES + (escrituraES ? ' ' + escrituraES : '') + ' EN ADELANTE EL INMUEBLE.',
+      inmuebleDesc + predialEN + (escrituraEN ? ' ' + escrituraEN : '') + ' HEREINAFTER THE PROPERTY.',
     ),
     spacerRow(),
 
@@ -235,8 +274,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // CUARTA
     headerRow('CUARTA.- FACULTADES DEL APODERADO', 'FOURTH.- FACULTIES OF THE PROXY'),
     biRow(
-      `El poder otorgado se confiere ÚNICA Y EXCLUSIVAMENTE, para que los apoderados, conjunta o separadamente, en favor del poderdante: ${facultadesText.es}; respecto de los derechos fideicomisarios en el fideicomiso mencionado en la CLÁUSULA SEGUNDA que tiene afectado el INMUEBLE.`,
-      `The power of attorney hereby granted is ONLY AND EXCLUSIVELY for the representatives, jointly or separately, in favor of the grantor: ${facultadesText.en}; regarding the trust rights of the trust mentioned in CLAUSE SECOND, that the PROPERTY is affected by.`,
+      `El poder otorgado se confiere ÚNICA Y EXCLUSIVAMENTE, para que los apoderados, conjunta o separadamente, en favor del poderdante: ${facultadesText.es}; respecto ${esFideicomiso ? 'de los derechos fideicomisarios en el fideicomiso mencionado en la CLÁUSULA SEGUNDA que tiene afectado el INMUEBLE' : 'del INMUEBLE mencionado en la CLÁUSULA SEGUNDA'}.`,
+      `The power of attorney hereby granted is ONLY AND EXCLUSIVELY for the representatives, jointly or separately, in favor of the grantor: ${facultadesText.en}; regarding ${esFideicomiso ? 'the trust rights of the trust mentioned in CLAUSE SECOND, that the PROPERTY is affected by' : 'the PROPERTY mentioned in CLAUSE SECOND'}.`,
     ),
     spacerRow(),
 
