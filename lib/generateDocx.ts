@@ -171,14 +171,24 @@ function spacerRow(): TableRow {
 }
 
 // apoderadosStr ahora viene del motor de concordancia
+function joinConY(items: string[]): string {
+  if (items.length <= 1) return items[0] || '';
+  return items.slice(0, -1).join(', ') + ' Y ' + items[items.length - 1];
+}
+
+function joinWithAnd(items: string[]): string {
+  if (items.length <= 1) return items[0] || '';
+  return items.slice(0, -1).join(', ') + ' AND ' + items[items.length - 1];
+}
+
 function buildPoderTitulo(data: PoderData): string {
-  const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].es).join(', ');
-  return `PODER PARA ${tipos}`.replace('PODER PARA PODER PARA', 'PODER PARA');
+  const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].es);
+  return ('PODER PARA ' + joinConY(tipos)).replace('PODER PARA PODER PARA', 'PODER PARA');
 }
 
 function buildPoderTituloEN(data: PoderData): string {
-  const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].en).join(', ');
-  return `POWER OF ATTORNEY FOR ${tipos}`;
+  const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].en);
+  return 'POWER OF ATTORNEY FOR ' + joinWithAnd(tipos);
 }
 
 function getEstadoCivil(data: PoderData): { es: string; en: string } {
