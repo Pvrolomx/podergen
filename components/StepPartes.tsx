@@ -131,7 +131,13 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div>
                   <label className="pg-label">Género / Gender</label>
-                  <select className="pg-select" value={pd.genero} onChange={(e) => updatePoderdanteN(idx, 'genero', e.target.value)}>
+                  <select className="pg-select" value={pd.genero} onChange={(e) => {
+                      updatePoderdanteN(idx, 'genero', e.target.value);
+                      // Si ya tiene Retirado/a, actualizar concordancia
+                      if (pd.ocupacion.startsWith('Retirad')) {
+                        updatePoderdanteN(idx, 'ocupacion', e.target.value === 'F' ? 'Retirada / Retired' : 'Retirado / Retired');
+                      }
+                    }}>
                     <option value="M">Masculino / Male</option>
                     <option value="F">Femenino / Female</option>
                   </select>
@@ -177,7 +183,7 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                     pd.ocupacion.startsWith('Retirado') ? 'retirado'
                     : pd.ocupacion === '' ? '' : 'otra'
                   } onChange={(e) => {
-                    if (e.target.value === 'retirado') updatePoderdanteN(idx, 'ocupacion', 'Retirado(a) / Retired');
+                    if (e.target.value === 'retirado') updatePoderdanteN(idx, 'ocupacion', pd.genero === 'F' ? 'Retirada / Retired' : 'Retirado / Retired');
                     else if (e.target.value === 'otra') updatePoderdanteN(idx, 'ocupacion', ' '); // espacio = sentinel "Otra seleccionada"
                     else updatePoderdanteN(idx, 'ocupacion', '');
                   }}>
