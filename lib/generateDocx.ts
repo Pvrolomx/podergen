@@ -113,7 +113,7 @@ function headerRow(esTitle: string, enTitle: string): TableRow {
   const makeHeaderCell = (text: string): TableCell =>
     new TableCell({
       width: { size: 50, type: WidthType.PERCENTAGE },
-      shading: { type: ShadingType.SOLID, color: 'C9A84C', fill: 'C9A84C' },
+      shading: { type: ShadingType.SOLID, color: 'E8D5A0', fill: 'E8D5A0' },
       borders: {
         top: { style: BorderStyle.NONE, size: 0 },
         bottom: { style: BorderStyle.NONE, size: 0 },
