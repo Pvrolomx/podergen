@@ -593,57 +593,59 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   const lugarFechaVal = data.lugar && data.fecha ? `${data.lugar}, ${data.fecha}` : '_________________________________';
 
   const sigRows: TableRow[] = [
-    // ── Fila 1: Lugar y Fecha ─────────────────────────────────────────
+    // ── Fila 1: Lugar y Fecha — +1 salto (topMargin mayor) ───────────
     sigRow(
       [
+        sigSpace(300),
         sigP('Lugar y Fecha:', true, 16),
         sigP(lugarFechaVal, false, 18),
       ],
       [
+        sigSpace(300),
         sigP(col2('Place and Date:', 'Lieu et Date:'), true, 16),
         sigP(lugarFechaVal, false, 18),
       ],
       200
     ),
 
-    // ── Fila 2: Nombre del Notario ────────────────────────────────────
+    // ── Fila 2: Nombre del Notario — -1 salto ────────────────────────
     sigRow(
       [
-        sigSpace(500),
+        sigSpace(200),
         sigLine(),
         sigP('Nombre del Notario Público', false, 16, true),
       ],
       [
-        sigSpace(500),
+        sigSpace(200),
         sigLine(),
         sigP(col2('Name of Notary Public', 'Nom du Notaire Public'), false, 16, true),
       ]
     ),
 
-    // ── Fila 3: Firma y Sello del Notario ─────────────────────────────
+    // ── Fila 3: Firma y Sello del Notario — -1 salto ─────────────────
     sigRow(
       [
-        sigSpace(500),
+        sigSpace(200),
         sigLine(),
         sigP('Firma y Sello del Notario Público', false, 16, true),
       ],
       [
-        sigSpace(500),
+        sigSpace(200),
         sigLine(),
         sigP(col2('Notary Seal & Signature', 'Sceau et Signature Notariale'), false, 16, true),
       ]
     ),
 
-    // ── Fila 4: Poderdante(s) ─────────────────────────────────────────
+    // ── Fila 4: Poderdante(s) — -1 salto ─────────────────────────────
     sigRow(
       [
-        sigSpace(500),
+        sigSpace(200),
         sigLine(),
         ...poderdantesFirmaNames,
         sigP(poderdantesLabelES, false, 16, true),
       ],
       [
-        sigSpace(500),
+        sigSpace(200),
         sigLine(),
         ...poderdantesFirmaNames,
         sigP(poderdantesFirmaLabel, false, 16, true),
