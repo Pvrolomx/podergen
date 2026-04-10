@@ -620,62 +620,62 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   const lugarFechaVal = data.lugar && data.fecha ? `${data.lugar}, ${data.fecha}` : '_________________________________';
 
   const sigRows: TableRow[] = [
-    // ── Fila 1: Lugar y Fecha — +1 salto (topMargin mayor) ───────────
+    // ── Fila 1: Lugar y Fecha — -2 arriba, +1 antes del label ────────
     sigRow(
       [
-        sigSpace(300),
-        sigP('Lugar y Fecha:', true, 16),
-        sigP(lugarFechaVal, false, 18),
+        sigSpace(100),
+        sigP('Lugar y Fecha:', true, 20),
+        sigP(lugarFechaVal, false, 20),
       ],
       [
-        sigSpace(300),
-        sigP(col2('Place and Date:', 'Lieu et Date:'), true, 16),
-        sigP(lugarFechaVal, false, 18),
+        sigSpace(100),
+        sigP(col2('Place and Date:', 'Lieu et Date:'), true, 20),
+        sigP(lugarFechaVal, false, 20),
       ],
-      200
+      80
     ),
 
     // ── Fila 2: Nombre del Notario — -1 salto ────────────────────────
     sigRow(
       [
-        sigSpace(200),
+        sigSpace(100),
         sigLine(),
-        sigP('Nombre del Notario Público', false, 16, true),
+        sigP('Nombre del Notario Público', false, 20, true),
       ],
       [
-        sigSpace(200),
+        sigSpace(100),
         sigLine(),
-        sigP(col2('Name of Notary Public', 'Nom du Notaire Public'), false, 16, true),
+        sigP(col2('Name of Notary Public', 'Nom du Notaire Public'), false, 20, true),
       ]
     ),
 
-    // ── Fila 3: Firma y Sello del Notario — -1 salto ─────────────────
+    // ── Fila 3: Firma y Sello del Notario — -2 saltos ─────────────────
     sigRow(
       [
-        sigSpace(200),
+        sigSpace(60),
         sigLine(),
-        sigP('Firma y Sello del Notario Público', false, 16, true),
+        sigP('Firma y Sello del Notario Público', false, 20, true),
       ],
       [
-        sigSpace(200),
+        sigSpace(60),
         sigLine(),
-        sigP(col2('Notary Seal & Signature', 'Sceau et Signature Notariale'), false, 16, true),
+        sigP(col2('Notary Seal & Signature', 'Sceau et Signature Notariale'), false, 20, true),
       ]
     ),
 
     // ── Fila 4: Poderdante(s) — -1 salto ─────────────────────────────
     sigRow(
       [
-        sigSpace(200),
+        sigSpace(100),
         sigLine(),
         ...poderdantesFirmaNames,
-        sigP(poderdantesLabelES, false, 16, true),
+        sigP(poderdantesLabelES, false, 20, true),
       ],
       [
-        sigSpace(200),
+        sigSpace(100),
         sigLine(),
         ...poderdantesFirmaNames,
-        sigP(poderdantesFirmaLabel, false, 16, true),
+        sigP(poderdantesFirmaLabel, false, 20, true),
       ]
     ),
   ];
