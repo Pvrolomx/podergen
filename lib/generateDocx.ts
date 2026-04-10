@@ -58,6 +58,34 @@ function multilineRow(es: string, en: string): TableRow {
   });
 }
 
+// Helper: bilingual row con segmentos de texto formateados
+// Permite negrita selectiva en nombres
+type Seg = { text: string; bold?: boolean };
+
+function biRowRich(esSegs: Seg[], enSegs: Seg[]): TableRow {
+  const makeCell = (segs: Seg[], isLeft: boolean): TableCell =>
+    new TableCell({
+      width: { size: 50, type: WidthType.PERCENTAGE },
+      borders: {
+        top: { style: BorderStyle.NONE, size: 0 },
+        bottom: { style: BorderStyle.NONE, size: 0 },
+        left: { style: BorderStyle.NONE, size: 0 },
+        right: isLeft
+          ? { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' }
+          : { style: BorderStyle.NONE, size: 0 },
+      },
+      margins: { top: 60, bottom: 60, left: 120, right: 120 },
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          spacing: { before: 0, after: 120 },
+          children: segs.map(s => new TextRun({ text: s.text, bold: s.bold ?? false, size: 18, font: 'Times New Roman' })),
+        }),
+      ],
+    });
+  return new TableRow({ children: [makeCell(esSegs, true), makeCell(enSegs, false)] });
+}
+
 // Helper: create a bilingual row (ES left, EN right)
 function biRow(
   es: string,
@@ -391,27 +419,26 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   const rows: TableRow[] = [
     // ===== INTRO =====
     // ── Proemio — varía según modoProemio ──────────────────────────
-    biRow(
+    biRowRich(
       data.modoProemio === 'suscrito'
-        ? `--- ${suscritos_ES} ${poderdantesStr}, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:`
+        ? [{ text: `--- ${suscritos_ES} ` }, { text: poderdantesStr, bold: true }, { text: `, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:` }]
         : (multiple
-            ? `El Notario Público que autoriza, certifica: que ante mí comparecieron ${poderdantesStr}, a fin de:`
-            : ct.compareció_ES),
+            ? [{ text: 'El Notario Público que autoriza, certifica: que ante mí comparecieron ' }, { text: poderdantesStr, bold: true }, { text: ', a fin de:' }]
+            : [{ text: ct.compareció_ES }]),
       data.modoProemio === 'suscrito'
-        ? `--- ${suscritos_EN} ${poderdantesStr}, appeared to:`
+        ? [{ text: `--- ${suscritos_EN} ` }, { text: poderdantesStr, bold: true }, { text: ', appeared to:' }]
         : (multiple
-            ? `The Notary Public who authorizes certifies that: ${poderdantesStr}, appeared before me to:`
-            : ct.compareció_EN),
-      { center: false }
+            ? [{ text: 'The Notary Public who authorizes certifies that: ' }, { text: poderdantesStr, bold: true }, { text: ', appeared before me to:' }]
+            : [{ text: ct.compareció_EN }]),
     ),
     biRow('HACER CONSTAR:', col2('RECORD:', FR.hacerConstar), { bold: true, center: true }),
-    biRow(
+    biRowRich(
       data.modoProemio === 'suscrito'
-        ? `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgamos y formalizamos' : 'otorgo y formalizo'} a favor de ${apoderadosStr}, de acuerdo con las siguientes:`
-        : `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgan y formalizan' : 'otorga y formaliza'} a favor de ${apoderadosStr}, de acuerdo con las siguientes:`,
+        ? [{ text: `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgamos y formalizamos' : 'otorgo y formalizo'} a favor de ` }, { text: apoderadosStr, bold: true }, { text: ', de acuerdo con las siguientes:' }]
+        : [{ text: `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgan y formalizan' : 'otorga y formaliza'} a favor de ` }, { text: apoderadosStr, bold: true }, { text: ', de acuerdo con las siguientes:' }],
       data.modoProemio === 'suscrito'
-        ? `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is hereby ${multiple ? 'granted and formalized' : 'granted and formalized'} in favor of ${apoderadosStr}, according to the following:`
-        : `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is granted and formalized through this act in favor of ${apoderadosStr}, according to the following:`,
+        ? [{ text: `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is hereby granted and formalized in favor of ` }, { text: apoderadosStr, bold: true }, { text: ', according to the following:' }]
+        : [{ text: `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is granted and formalized through this act in favor of ` }, { text: apoderadosStr, bold: true }, { text: ', according to the following:' }],
     ),
 
     // ===== CLÁUSULAS =====
@@ -419,9 +446,9 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
 
     // PRIMERA
     headerRow('PRIMERA.- OTORGAMIENTO DE PODER', col2('FIRST.- GRANTING OF POWERS OF ATTORNEY', FR.primeraHeader)),
-    biRow(
-      `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "otorgamos" : "otorgo") : (multiple ? "otorgan" : "otorga")} ${tipoES}, en favor de ${apoderadosStr}, para que ${apoEjercite}${apoConjunta} en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; ${apoPodrán} firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto ${seLeOtorga} y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.`,
-      `${poderdantesStr}, ${data.modoProemio === "suscrito" ? (multiple ? "hereby grant" : "hereby grants") : (multiple ? "grant" : "grants")} ${tipoEN} in favor of ${apoderadosStr}, to be exercised${apoJointly} in terms authorized by paragraphs second and third of article 2554 of the Federal Civil Code, and their equivalent in the further entities of the Republic and the Protocol On Uniform Legal Provisions. For powers of attorney approved with resolution XLVIII of the Seventh International American Conference of the PanAmerican Union, signed on May 7th, 1953, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the Mexican United States on December 22nd, 1951, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the United Mexican States on June 12th, 1953. Having deposited the instrument of ratification with the Secretary General of the Organization of American States on June 24th, 1953; and published in the Official Journal of the Federation on December 3rd, 1953. In accordance with the Interamerican Convention on the Legal Regime of Powers of Attorney to be used abroad, issued by the Organization of American States on January 30th, 1975 and adopted by Mexico according to publication made in the Official Journal of the Federation on February 6th, 1987; and in accordance with the Federal Civil Code and all articles relating to the various Civil Codes of the Federal Entities of the United Mexican States; ${apoTheProxy} sign the public or private documentation that may be necessary to exercise this power, with the amplest capacities to achieve the purpose of the Power in this act granted and may be exercised before Private Persons, or Administrative, Judicial Authorities, whose jurisdiction be Federal, State, or Municipal.`,
+    biRowRich(
+      [{ text: poderdantesStr, bold: true }, { text: `, ${data.modoProemio === "suscrito" ? (multiple ? "otorgamos" : "otorgo") : (multiple ? "otorgan" : "otorga")} ${tipoES}, en favor de ` }, { text: apoderadosStr, bold: true }, { text: `, para que ${apoEjercite}${apoConjunta} en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; ${apoPodrán} firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto ${seLeOtorga} y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.` }],
+      [{ text: poderdantesStr, bold: true }, { text: `, ${data.modoProemio === "suscrito" ? (multiple ? "hereby grant" : "hereby grants") : (multiple ? "grant" : "grants")} ${tipoEN} in favor of ` }, { text: apoderadosStr, bold: true }, { text: `, to be exercised${apoJointly} in terms authorized by paragraphs second and third of article 2554 of the Federal Civil Code, and their equivalent in the further entities of the Republic and the Protocol On Uniform Legal Provisions. For powers of attorney approved with resolution XLVIII of the Seventh International American Conference of the PanAmerican Union, signed on May 7th, 1953, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the Mexican United States on December 22nd, 1951, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the United Mexican States on June 12th, 1953. Having deposited the instrument of ratification with the Secretary General of the Organization of American States on June 24th, 1953; and published in the Official Journal of the Federation on December 3rd, 1953. In accordance with the Interamerican Convention on the Legal Regime of Powers of Attorney to be used abroad, issued by the Organization of American States on January 30th, 1975 and adopted by Mexico according to publication made in the Official Journal of the Federation on February 6th, 1987; and in accordance with the Federal Civil Code and all articles relating to the various Civil Codes of the Federal Entities of the United Mexican States; ${apoTheProxy} sign the public or private documentation that may be necessary to exercise this power, with the amplest capacities to achieve the purpose of the Power in this act granted and may be exercised before Private Persons, or Administrative, Judicial Authorities, whose jurisdiction be Federal, State, or Municipal.` }],
     ),
 
     // SEGUNDA
