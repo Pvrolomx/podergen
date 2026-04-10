@@ -33,7 +33,7 @@ function multilineRow(es: string, en: string): TableRow {
       new Paragraph({
         alignment: AlignmentType.JUSTIFIED,
         spacing: { before: 20, after: 20 },
-        children: [new TextRun({ text: line, size: 18, font: 'Times New Roman' })],
+        children: [new TextRun({ text: line, size: 20, font: 'Arial' })],
       })
     );
 
@@ -79,7 +79,7 @@ function biRowRich(esSegs: Seg[], enSegs: Seg[]): TableRow {
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
           spacing: { before: 0, after: 120 },
-          children: segs.map(s => new TextRun({ text: s.text, bold: s.bold ?? false, size: 18, font: 'Times New Roman' })),
+          children: segs.map(s => new TextRun({ text: s.text, bold: s.bold ?? false, size: 20, font: 'Arial' })),
         }),
       ],
     });
@@ -125,7 +125,7 @@ function biRow(
               text,
               bold,
               size,
-              font: 'Times New Roman',
+              font: 'Arial',
             }),
           ],
         }),
@@ -157,9 +157,9 @@ function headerRow(esTitle: string, enTitle: string): TableRow {
             new TextRun({
               text,
               bold: true,
-              size: 18,
+              size: 20,
               color: '0A1628',
-              font: 'Times New Roman',
+              font: 'Arial',
             }),
           ],
         }),
@@ -424,12 +424,12 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
         ? [{ text: `--- ${suscritos_ES} ` }, { text: poderdantesStr, bold: true }, { text: `, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:` }]
         : (multiple
             ? [{ text: 'El Notario Público que autoriza, certifica: que ante mí comparecieron ' }, { text: poderdantesStr, bold: true }, { text: ', a fin de:' }]
-            : [{ text: ct.compareció_ES }]),
+            : [{ text: 'El Notario Público que autoriza, certifica: que ante mí compareció ' }, { text: poderdantesStr, bold: true }, { text: ', a fin de:' }]),
       data.modoProemio === 'suscrito'
         ? [{ text: `--- ${suscritos_EN} ` }, { text: poderdantesStr, bold: true }, { text: ', appeared to:' }]
         : (multiple
             ? [{ text: 'The Notary Public who authorizes certifies that: ' }, { text: poderdantesStr, bold: true }, { text: ', appeared before me to:' }]
-            : [{ text: ct.compareció_EN }]),
+            : [{ text: 'The Notary Public who authorizes certifies that: ' }, { text: poderdantesStr, bold: true }, { text: ', appeared before me to:' }]),
     ),
     biRow('HACER CONSTAR:', col2('RECORD:', FR.hacerConstar), { bold: true, center: true }),
     biRowRich(
@@ -582,11 +582,11 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
 
   // ── Sección de Firmas — estructura completa bilingüe ─────────────────
   // Helper para párrafo centrado
-  const sigP = (text: string, bold = false, size = 18, italic = false) =>
+  const sigP = (text: string, bold = false, size = 20, italic = false) =>
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { before: 0, after: 60 },
-      children: [new TextRun({ text, bold, size, font: 'Times New Roman', italics: italic })],
+      children: [new TextRun({ text, bold, size, font: 'Arial', italics: italic })],
     });
   const sigLine = () => sigP('_________________________________');
   const sigSpace = (n = 400) => new Paragraph({ spacing: { before: n }, children: [new TextRun({ text: '' })] });
@@ -701,7 +701,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
         text: 'Hecho por Colmena 2026 | PoderGen — podergen.expatadvisormx.com | Expat Advisor MX',
         size: 14,
         color: '888888',
-        font: 'Times New Roman',
+        font: 'Arial',
         italics: true,
       }),
     ],
@@ -714,9 +714,9 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       new TextRun({
         text: `PODER NOTARIAL BILINGÜE / BILINGUAL POWER OF ATTORNEY`,
         bold: true,
-        size: 28,
+        size: 20,
         color: '0A1628',
-        font: 'Times New Roman',
+        font: 'Arial',
       }),
     ],
   });
@@ -726,10 +726,10 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       new Paragraph({
         alignment: AlignmentType.CENTER,
         children: [
-          new TextRun({ text: 'Página ', size: 16, font: 'Times New Roman', color: '888888' }),
-          new TextRun({ children: [PageNumber.CURRENT], size: 16, font: 'Times New Roman', color: '888888' }),
-          new TextRun({ text: ' de ', size: 16, font: 'Times New Roman', color: '888888' }),
-          new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, font: 'Times New Roman', color: '888888' }),
+          new TextRun({ text: 'Página ', size: 18, font: 'Arial', color: '888888' }),
+          new TextRun({ children: [PageNumber.CURRENT], size: 18, font: 'Arial', color: '888888' }),
+          new TextRun({ text: ' de ', size: 18, font: 'Arial', color: '888888' }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 18, font: 'Arial', color: '888888' }),
         ],
       }),
     ],
