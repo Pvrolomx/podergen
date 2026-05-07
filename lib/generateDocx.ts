@@ -199,6 +199,22 @@ function spacerRow(): TableRow {
   });
 }
 
+// Funciones de traducción de nacionalidad
+const NAC_EN_MAP: Record<string, string> = {
+  'estadounidense': 'American', 'canadiense': 'Canadian', 'mexicana': 'Mexican',
+  'mexicano': 'Mexican', 'británica': 'British', 'británico': 'British',
+  'francesa': 'French', 'francés': 'French', 'alemana': 'German', 'alemán': 'German',
+  'italiana': 'Italian', 'italiano': 'Italian', 'española': 'Spanish', 'español': 'Spanish',
+  'australiana': 'Australian', 'australiano': 'Australian',
+};
+const NAC_ES_MAP: Record<string, string> = {
+  'american': 'Estadounidense', 'canadian': 'Canadiense', 'mexican': 'Mexicana',
+  'british': 'Británica', 'french': 'Francesa', 'german': 'Alemana',
+  'italian': 'Italiana', 'spanish': 'Española', 'australian': 'Australiana',
+};
+function nacENfn(nac: string): string { return NAC_EN_MAP[nac.toLowerCase()] || nac; }
+function nacESfn(nac: string): string { return NAC_ES_MAP[nac.toLowerCase()] || nac; }
+
 // apoderadosStr ahora viene del motor de concordancia
 function joinConY(items: string[]): string {
   if (items.length <= 1) return items[0] || '';
@@ -431,6 +447,27 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
             ? [{ text: 'The Notary Public who authorizes certifies that: ' }, { text: poderdantesStr, bold: true }, { text: ', appeared before me to:' }]
             : [{ text: 'The Notary Public who authorizes certifies that: ' }, { text: poderdantesStr, bold: true }, { text: ', appeared before me to:' }]),
     ),
+    // ── GENERALES DEL/LOS PODERDANTE(S) ─────────────────────────────
+    ...todosLosPoderdantes.map((pd) => {
+      const ecES = ESTADO_CIVIL_LABELS[pd.estadoCivil]?.es ?? pd.estadoCivil;
+      const ecEN = ESTADO_CIVIL_LABELS[pd.estadoCivil]?.en ?? pd.estadoCivil;
+      const ocuES = pd.ocupacion ? pd.ocupacion.split(' / ')[0].trim() : '';
+      const ocuEN = pd.ocupacion?.includes('/') ? (pd.ocupacion.split(' / ')[1]?.trim() || pd.ocupacion) : pd.ocupacion;
+      const nacES = nacESfn(pd.nacionalidad);
+      const nacENval = nacENfn(pd.nacionalidad);
+      const nacidoA = pd.genero === 'F' ? 'nacida' : 'nacido';
+      const bornStr = pd.fechaNacimiento ? `, ${nacidoA} el ${pd.fechaNacimiento}` : '';
+      const bornStrEN = pd.fechaNacimiento ? `, born ${pd.fechaNacimiento}` : '';
+      const pasStr = pd.pasaporte ? `, quien se identifica con su Pasaporte ${nacES} número ${pd.pasaporte}${bornStr}` : '';
+      const pasStrEN = pd.pasaporte ? `, identified with ${pd.genero === 'F' ? 'her' : 'his'} ${nacENval} Passport number ${pd.pasaporte}${bornStrEN}` : '';
+      const esText = `${pd.nombre.toUpperCase()}, de nacionalidad ${nacES}, mayor de edad, ${ecES.toLowerCase()}, de ocupación ${ocuES}${pasStr}, con domicilio en ${pd.domicilio}.`;
+      const enText = `${pd.nombre.toUpperCase()}, ${nacENval} national, of legal age, ${ecEN.toLowerCase()}, occupation: ${ocuEN}${pasStrEN}, with address at ${pd.domicilio}.`;
+      return biRowRich(
+        [{ text: pd.nombre.toUpperCase(), bold: true }, { text: `, de nacionalidad ${nacES}, mayor de edad, ${ecES.toLowerCase()}, de ocupación ${ocuES}${pasStr}, con domicilio en ${pd.domicilio}.` }],
+        [{ text: pd.nombre.toUpperCase(), bold: true }, { text: `, ${nacENval} national, of legal age, ${ecEN.toLowerCase()}, occupation: ${ocuEN}${pasStrEN}, with address at ${pd.domicilio}.` }],
+      );
+    }),
+
     biRow('HACER CONSTAR:', col2('RECORD:', FR.hacerConstar), { bold: true, center: true }),
     biRowRich(
       data.modoProemio === 'suscrito'
