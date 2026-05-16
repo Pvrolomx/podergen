@@ -452,7 +452,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   const rows: TableRow[] = [
     // ===== INTRO =====
     // ── Proemio — varía según modoProemio ──────────────────────────
-    (() => {
+    ...((): TableRow[] => {
       // Construir los generales de cada poderdante para el proemio
       const buildGeneralesES = (pd: typeof todosLosPoderdantes[0]) => {
         const ecES = (pd.genero === 'F' ? ESTADO_CIVIL_LABELS[pd.estadoCivil]?.esF : ESTADO_CIVIL_LABELS[pd.estadoCivil]?.es) ?? pd.estadoCivil;
@@ -475,11 +475,19 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       };
 
       if (data.modoProemio === 'suscrito') {
-        // Modo suscrito: solo nombre, los generales no se repiten aquí
-        return biRowRich(
-          [{ text: `--- ${suscritos_ES} ` }, { text: poderdantesStr, bold: true }, { text: `, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:` }],
-          [{ text: `--- ${suscritos_EN} ` }, { text: poderdantesStr, bold: true }, { text: ', appeared to:' }],
-        );
+        // Modo suscrito: proemio + generales de cada poderdante como filas separadas
+        return [
+          biRowRich(
+            [{ text: `--- ${suscritos_ES} ` }, { text: poderdantesStr, bold: true }, { text: `, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:` }],
+            [{ text: `--- ${suscritos_EN} ` }, { text: poderdantesStr, bold: true }, { text: ', appeared to:' }],
+          ),
+          ...todosLosPoderdantes.map(pd =>
+            biRowRich(
+              [{ text: pd.nombre.toUpperCase(), bold: true }, { text: buildGeneralesES(pd) + '.' }],
+              [{ text: pd.nombre.toUpperCase(), bold: true }, { text: buildGeneralesEN(pd) + '.' }],
+            )
+          ),
+        ];
       }
 
       if (multiple) {
@@ -492,15 +500,15 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
           segsEN.push({ text: pd.nombre.toUpperCase(), bold: true });
           segsEN.push({ text: buildGeneralesEN(pd) + (i < todosLosPoderdantes.length - 1 ? '; ' : ', appeared before me to:') });
         });
-        return biRowRich(segsES, segsEN);
+        return [biRowRich(segsES, segsEN)];
       }
 
       // Notarial singular: un poderdante con sus generales integrados
       const pd0 = todosLosPoderdantes[0];
-      return biRowRich(
+      return [biRowRich(
         [{ text: 'El Notario Público que autoriza, certifica: que ante mí compareció ' }, { text: pd0.nombre.toUpperCase(), bold: true }, { text: buildGeneralesES(pd0) + ', a fin de:' }],
         [{ text: 'The Notary Public who authorizes certifies that: ' }, { text: pd0.nombre.toUpperCase(), bold: true }, { text: buildGeneralesEN(pd0) + ', appeared before me to:' }],
-      );
+      )];
     })(),
     biRow('HACER CONSTAR:', col2('RECORD:', FR.hacerConstar), { bold: true, center: true }),
     biRowRich(
