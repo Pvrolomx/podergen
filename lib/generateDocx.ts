@@ -253,7 +253,8 @@ function buildPoderTituloEN(data: PoderData): string {
 }
 
 function getEstadoCivil(data: PoderData): { es: string; en: string } {
-  return ESTADO_CIVIL_LABELS[data.poderdante.estadoCivil];
+  const ec = ESTADO_CIVIL_LABELS[data.poderdante.estadoCivil];
+  return { es: data.poderdante.genero === 'F' ? ec.esF : ec.es, en: ec.en };
 }
 
 function buildFacultadesText(facultades: Facultades): { es: string; en: string } {
@@ -454,7 +455,7 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     (() => {
       // Construir los generales de cada poderdante para el proemio
       const buildGeneralesES = (pd: typeof todosLosPoderdantes[0]) => {
-        const ecES = ESTADO_CIVIL_LABELS[pd.estadoCivil]?.es ?? pd.estadoCivil;
+        const ecES = (pd.genero === 'F' ? ESTADO_CIVIL_LABELS[pd.estadoCivil]?.esF : ESTADO_CIVIL_LABELS[pd.estadoCivil]?.es) ?? pd.estadoCivil;
         const ocuES = pd.ocupacion ? pd.ocupacion.split(' / ')[0].trim() : '';
         const nacES = nacESfn(pd.nacionalidad);
         const nacidoA = pd.genero === 'F' ? 'nacida' : 'nacido';

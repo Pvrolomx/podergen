@@ -117,7 +117,7 @@ export default function StepPreview({ data, onPrev }: Props) {
           <strong style={{ color: 'var(--pg-gold)', fontSize: '15px' }}>{poderdante.nombre || '—'}</strong>
           <br />
           <span style={{ fontSize: '13px' }}>
-            {[poderdante.nacionalidad, ESTADO_CIVIL_LABELS[poderdante.estadoCivil]?.es, poderdante.ocupacion].filter(Boolean).join(' · ')}
+            {[poderdante.nacionalidad, (poderdante.genero === 'F' ? ESTADO_CIVIL_LABELS[poderdante.estadoCivil]?.esF : ESTADO_CIVIL_LABELS[poderdante.estadoCivil]?.es), poderdante.ocupacion].filter(Boolean).join(' · ')}
           </span>
           {(poderdante.pasaporte || poderdante.fechaNacimiento) && (
             <><br />

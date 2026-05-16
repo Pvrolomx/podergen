@@ -148,12 +148,12 @@ export const DEFAULT_PODER: PoderData = {
   fecha: '',
 };
 
-export const ESTADO_CIVIL_LABELS: Record<EstadoCivil, { es: string; en: string }> = {
-  soltero: { es: 'Soltero(a)', en: 'Single' },
-  casado: { es: 'Casado(a)', en: 'Married' },
-  divorciado: { es: 'Divorciado(a)', en: 'Divorced' },
-  viudo: { es: 'Viudo(a)', en: 'Widowed' },
-  union_libre: { es: 'Unión libre', en: 'Common-law union' },
+export const ESTADO_CIVIL_LABELS: Record<EstadoCivil, { es: string; esF: string; en: string }> = {
+  soltero:     { es: 'Soltero',    esF: 'Soltera',    en: 'Single' },
+  casado:      { es: 'Casado',     esF: 'Casada',     en: 'Married' },
+  divorciado:  { es: 'Divorciado', esF: 'Divorciada', en: 'Divorced' },
+  viudo:       { es: 'Viudo',      esF: 'Viuda',      en: 'Widowed' },
+  union_libre: { es: 'Unión libre', esF: 'Unión libre', en: 'Common-law union' },
 };
 
 export const TIPO_PODER_LABELS: Record<TipoPoder, { es: string; en: string }> = {

@@ -53,8 +53,12 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
       nombre: '', nacionalidad: '', estadoCivil: 'casado', ocupacion: '',
       domicilio: '', pasaporte: '', fechaNacimiento: '', genero: 'M',
     };
-    const lista = [...todosLosPoderdantes, nuevo];
-    updateData({ poderdantes: lista });
+    // Siempre incluir el poderdante principal como primero de la lista
+    const listaBase: Poderdante[] = data.poderdantes?.length > 0
+      ? data.poderdantes
+      : [data.poderdante];
+    const lista = [...listaBase, nuevo];
+    updateData({ poderdante: lista[0], poderdantes: lista });
   };
 
   const removePoderdante = (idx: number) => {
