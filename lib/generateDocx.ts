@@ -475,30 +475,36 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       };
 
       if (data.modoProemio === 'suscrito') {
-        // Modo suscrito: proemio + generales de cada poderdante como filas separadas
-        return [
-          biRowRich(
-            [{ text: `--- ${suscritos_ES} ` }, { text: poderdantesStr, bold: true }, { text: `, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:` }],
-            [{ text: `--- ${suscritos_EN} ` }, { text: poderdantesStr, bold: true }, { text: ', appeared to:' }],
-          ),
-          ...todosLosPoderdantes.map(pd =>
-            biRowRich(
-              [{ text: pd.nombre.toUpperCase(), bold: true }, { text: buildGeneralesES(pd) + '.' }],
-              [{ text: pd.nombre.toUpperCase(), bold: true }, { text: buildGeneralesEN(pd) + '.' }],
-            )
-          ),
-        ];
+        // Modo suscrito: todo en un solo párrafo encadenado
+        // "--- Los suscritos NOMBRE1, generales1, y NOMBRE2, generales2, comparecemos a fin de:"
+        const segsES: {text:string;bold?:boolean}[] = [{ text: `--- ${suscritos_ES} ` }];
+        const segsEN: {text:string;bold?:boolean}[] = [{ text: `--- ${suscritos_EN} ` }];
+        todosLosPoderdantes.forEach((pd, i) => {
+          const isLast = i === todosLosPoderdantes.length - 1;
+          const isSecondToLast = i === todosLosPoderdantes.length - 2;
+          segsES.push({ text: pd.nombre.toUpperCase(), bold: true });
+          segsES.push({ text: buildGeneralesES(pd) + (isLast
+            ? `, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:`
+            : isSecondToLast ? ', y ' : ', ') });
+          segsEN.push({ text: pd.nombre.toUpperCase(), bold: true });
+          segsEN.push({ text: buildGeneralesEN(pd) + (isLast
+            ? `, ${multiple ? 'appeared' : 'appeared'} to:`
+            : isSecondToLast ? ', and ' : ', ') });
+        });
+        return [biRowRich(segsES, segsEN)];
       }
 
       if (multiple) {
-        // Notarial plural: listar cada poderdante con sus generales
+        // Notarial plural: párrafo único encadenado con "y" antes del último
         const segsES: {text:string;bold?:boolean}[] = [{ text: 'El Notario Público que autoriza, certifica: que ante mí comparecieron ' }];
         const segsEN: {text:string;bold?:boolean}[] = [{ text: 'The Notary Public who authorizes certifies that: ' }];
         todosLosPoderdantes.forEach((pd, i) => {
+          const isLast = i === todosLosPoderdantes.length - 1;
+          const isSecondToLast = i === todosLosPoderdantes.length - 2;
           segsES.push({ text: pd.nombre.toUpperCase(), bold: true });
-          segsES.push({ text: buildGeneralesES(pd) + (i < todosLosPoderdantes.length - 1 ? '; ' : ', a fin de:') });
+          segsES.push({ text: buildGeneralesES(pd) + (isLast ? ', a fin de:' : isSecondToLast ? ', y ' : ', ') });
           segsEN.push({ text: pd.nombre.toUpperCase(), bold: true });
-          segsEN.push({ text: buildGeneralesEN(pd) + (i < todosLosPoderdantes.length - 1 ? '; ' : ', appeared before me to:') });
+          segsEN.push({ text: buildGeneralesEN(pd) + (isLast ? ', appeared before me to:' : isSecondToLast ? ', and ' : ', ') });
         });
         return [biRowRich(segsES, segsEN)];
       }
