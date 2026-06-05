@@ -1,8 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import type { PoderData, TipoPoder, ModoProemio, RegimenEstado, Poderdante } from '@/types/poder';
 import { TIPO_PODER_LABELS } from '@/types/poder';
-
 interface Props {
   data: PoderData;
   updateData: (partial: Partial<PoderData>) => void;
@@ -33,6 +33,27 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
       const newAps = apoderados.filter((_, i) => i !== idx);
       updateData({ apoderados: newAps });
     }
+  };
+
+  // ── Traducción de ocupación ────────────────────────────────────────
+  const [translatingOcu, setTranslatingOcu] = useState<number | null>(null);
+
+  const translateOcupacion = async (idx: number, texto: string) => {
+    const t = texto.trim();
+    if (!t || t.includes(' / ')) return; // ya bilingüe o vacío
+    setTranslatingOcu(idx);
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: t, idioma: data.idiomaDoc ?? 'en', contexto: 'ocupacion' }),
+      });
+      const result = await res.json();
+      if (result.translated) {
+        updatePoderdanteN(idx, 'ocupacion', `${t} / ${result.translated}`);
+      }
+    } catch { /* sin traducción, queda el texto original */ }
+    finally { setTranslatingOcu(null); }
   };
 
   // ── Múltiples poderdantes ─────────────────────────────────────────
@@ -196,12 +217,21 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                     <option value="otra">Otra / Other</option>
                   </select>
                   {!pd.ocupacion.startsWith('Retirado') && pd.ocupacion !== '' && (
-                    <input className="pg-input" placeholder="ej. Empresario / Business Owner"
-                      value={pd.ocupacion.trim()}
-                      onChange={(e) => updatePoderdanteN(idx, 'ocupacion', e.target.value)}
-                      style={{ marginTop: '6px' }}
-                      autoFocus
-                    />
+                    <div style={{ position: 'relative', marginTop: '6px' }}>
+                      <input className="pg-input"
+                        placeholder="ej. Gerente / Manager"
+                        value={pd.ocupacion.trim()}
+                        onChange={(e) => updatePoderdanteN(idx, 'ocupacion', e.target.value)}
+                        onBlur={(e) => translateOcupacion(idx, e.target.value)}
+                        autoFocus
+                        style={{ paddingRight: translatingOcu === idx ? '32px' : undefined }}
+                      />
+                      {translatingOcu === idx && (
+                        <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: 'var(--pg-gold)', opacity: 0.7 }}>
+                          ✦
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
