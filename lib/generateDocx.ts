@@ -745,21 +745,25 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
       ]
     ),
 
-    // ── Fila 4: Poderdante(s) — -1 salto ─────────────────────────────
-    sigRow(
-      [
-        sigSpace(100),
-        sigLine(),
-        ...poderdantesFirmaNames,
-        sigP(poderdantesLabelES, false, 20, true),
-      ],
-      [
-        sigSpace(100),
-        sigLine(),
-        ...poderdantesFirmaNames,
-        sigP(poderdantesFirmaLabel, false, 20, true),
-      ]
-    ),
+    // ── Fila(s) 4+: Un poderdante por fila ───────────────────────────
+    ...todosLosPoderdantes.map((pd) => {
+      const labelES = pd.genero === 'F' ? 'La Poderdante' : 'El Poderdante';
+      const labelEN = col2(pd.genero === 'F' ? 'Grantor' : 'Grantor', pd.genero === 'F' ? FR.firmaLabel_F : FR.firmaLabel_M);
+      return sigRow(
+        [
+          sigSpace(100),
+          sigLine(),
+          sigP(pd.nombre.toUpperCase(), true, 20),
+          sigP(labelES, false, 20, true),
+        ],
+        [
+          sigSpace(100),
+          sigLine(),
+          sigP(pd.nombre.toUpperCase(), true, 20),
+          sigP(labelEN, false, 20, true),
+        ]
+      );
+    }),
   ];
 
   const mainTable = new Table({
