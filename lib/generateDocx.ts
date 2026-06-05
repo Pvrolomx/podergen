@@ -660,9 +660,6 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
         col2(`In witness whereof, the grantor signs this instrument.`, FR.enFeDeLo(c.laEl)),
       ),
     ]),
-
-    // FIRMA SECTION
-    headerRow('FIRMAS — SIGNATURES', col2('FIRMAS — SIGNATURES', 'SIGNATURES — FIRMAS')),
   ];
 
   // ── Sección de Firmas — estructura completa bilingüe ─────────────────
