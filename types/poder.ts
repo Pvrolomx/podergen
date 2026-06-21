@@ -13,6 +13,7 @@ export interface Poderdante {
   ocupacion: string;
   domicilio: string;
   pasaporte: string;
+  aka?: string;           // también conocido como / also known as
   fechaNacimiento: string;
   genero: Genero;
 }
@@ -92,6 +93,7 @@ export const DEFAULT_PODER: PoderData = {
     ocupacion: '',
     domicilio: '',
     pasaporte: '',
+    aka: '',
     fechaNacimiento: '',
     genero: 'M',
   },

@@ -153,6 +153,14 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                 <input className="pg-input" placeholder="ej. MARJORIE KATHLEEN BRAATZ"
                   value={pd.nombre} onChange={(e) => updatePoderdanteN(idx, 'nombre', e.target.value.toUpperCase())} />
               </div>
+              <div>
+                <label className="pg-label" style={{ color: 'rgba(201,168,76,0.6)' }}>
+                  También conocido(a) como / Also known as <span style={{ fontSize: '10px', opacity: 0.6 }}>(opcional)</span>
+                </label>
+                <input className="pg-input" placeholder="ej. MARJORIE K. BRAATZ"
+                  value={pd.aka ?? ''}
+                  onChange={(e) => updatePoderdanteN(idx, 'aka', e.target.value.toUpperCase())} />
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div>
                   <label className="pg-label">Género / Gender</label>

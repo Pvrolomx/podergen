@@ -459,19 +459,21 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
         const ocuES = pd.ocupacion ? pd.ocupacion.split(' / ')[0].trim() : '';
         const nacES = nacESfn(pd.nacionalidad);
         const nacidoA = pd.genero === 'F' ? 'nacida' : 'nacido';
+        const akaStr = pd.aka?.trim() ? `, también ${pd.genero === 'F' ? 'conocida' : 'conocido'} como ${pd.aka.trim().toUpperCase()}` : '';
         const pasStr = pd.pasaporte
           ? `, quien se identifica con su Pasaporte ${nacES} número ${pd.pasaporte}${pd.fechaNacimiento ? `, ${nacidoA} el ${fmtFecha(pd.fechaNacimiento)}` : ''}`
           : '';
-        return `, de nacionalidad ${nacES}, mayor de edad, ${ecES.toLowerCase()}${ocuES ? `, de ocupación ${ocuES}` : ''}${pasStr}${pd.domicilio ? `, con domicilio en ${pd.domicilio}` : ''}`;
+        return `${akaStr}, de nacionalidad ${nacES}, mayor de edad, ${ecES.toLowerCase()}${ocuES ? `, de ocupación ${ocuES}` : ''}${pasStr}${pd.domicilio ? `, con domicilio en ${pd.domicilio}` : ''}`;
       };
       const buildGeneralesEN = (pd: typeof todosLosPoderdantes[0]) => {
         const ecEN = ESTADO_CIVIL_LABELS[pd.estadoCivil]?.en ?? pd.estadoCivil;
         const ocuEN = pd.ocupacion?.includes('/') ? (pd.ocupacion.split(' / ')[1]?.trim() || pd.ocupacion) : pd.ocupacion;
         const nacENval = nacENfn(pd.nacionalidad);
+        const akaStr = pd.aka?.trim() ? `, also known as ${pd.aka.trim().toUpperCase()}` : '';
         const pasStr = pd.pasaporte
           ? `, identified with ${pd.genero === 'F' ? 'her' : 'his'} ${nacENval} Passport number ${pd.pasaporte}${pd.fechaNacimiento ? `, born ${fmtFecha(pd.fechaNacimiento)}` : ''}`
           : '';
-        return `, ${nacENval} national, of legal age, ${ecEN.toLowerCase()}${ocuEN ? `, occupation: ${ocuEN}` : ''}${pasStr}${pd.domicilio ? `, with address at ${pd.domicilio}` : ''}`;
+        return `${akaStr}, ${nacENval} national, of legal age, ${ecEN.toLowerCase()}${ocuEN ? `, occupation: ${ocuEN}` : ''}${pasStr}${pd.domicilio ? `, with address at ${pd.domicilio}` : ''}`;
       };
 
       if (data.modoProemio === 'suscrito') {
