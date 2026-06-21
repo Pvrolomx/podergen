@@ -755,17 +755,21 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     ...todosLosPoderdantes.map((pd) => {
       const labelES = pd.genero === 'F' ? 'La Poderdante' : 'El Poderdante';
       const labelEN = col2(pd.genero === 'F' ? 'Grantor' : 'Grantor', pd.genero === 'F' ? FR.firmaLabel_F : FR.firmaLabel_M);
+      const akaES = pd.aka?.trim() ? `también ${pd.genero === 'F' ? 'conocida' : 'conocido'} como ${pd.aka.trim().toUpperCase()}` : null;
+      const akaEN = pd.aka?.trim() ? col2(`also known as ${pd.aka.trim().toUpperCase()}`, `également ${pd.genero === 'F' ? 'connue' : 'connu'} sous le nom de ${pd.aka.trim().toUpperCase()}`) : null;
       return sigRow(
         [
           sigSpace(100),
           sigLine(),
           sigP(pd.nombre.toUpperCase(), true, 20),
+          ...(akaES ? [sigP(akaES, false, 18, true)] : []),
           sigP(labelES, false, 20, true),
         ],
         [
           sigSpace(100),
           sigLine(),
           sigP(pd.nombre.toUpperCase(), true, 20),
+          ...(akaEN ? [sigP(akaEN, false, 18, true)] : []),
           sigP(labelEN, false, 20, true),
         ]
       );
