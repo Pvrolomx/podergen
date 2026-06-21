@@ -112,24 +112,33 @@ export default function StepPreview({ data, onPrev }: Props) {
           </div>
         </div>
 
-        {/* Poderdante */}
-        <PreviewSection title="PODERDANTE / GRANTOR">
-          <strong style={{ color: 'var(--pg-gold)', fontSize: '15px' }}>{poderdante.nombre || '—'}</strong>
-          <br />
-          <span style={{ fontSize: '13px' }}>
-            {[poderdante.nacionalidad, (poderdante.genero === 'F' ? ESTADO_CIVIL_LABELS[poderdante.estadoCivil]?.esF : ESTADO_CIVIL_LABELS[poderdante.estadoCivil]?.es), poderdante.ocupacion].filter(Boolean).join(' · ')}
-          </span>
-          {(poderdante.pasaporte || poderdante.fechaNacimiento) && (
-            <><br />
-            <span style={{ fontSize: '12px', color: 'rgba(245,240,232,0.6)' }}>
-              {poderdante.pasaporte && `Pasaporte: ${poderdante.pasaporte}`}
-              {poderdante.pasaporte && poderdante.fechaNacimiento && '  ·  '}
-              {poderdante.fechaNacimiento && `Nac: ${poderdante.fechaNacimiento}`}
-            </span></>
-          )}
-          {poderdante.domicilio && (
-            <><br /><span style={{ fontSize: '12px', color: 'rgba(245,240,232,0.6)' }}>{poderdante.domicilio}</span></>
-          )}
+        {/* Poderdante(s) */}
+        <PreviewSection title="PODERDANTE(S) / GRANTOR(S)">
+          {(data.poderdantes?.length > 0 ? data.poderdantes : [poderdante]).map((pd, idx) => (
+            <div key={idx} style={{ marginBottom: idx < (data.poderdantes?.length || 1) - 1 ? '10px' : 0, paddingBottom: idx < (data.poderdantes?.length || 1) - 1 ? '10px' : 0, borderBottom: idx < (data.poderdantes?.length || 1) - 1 ? '1px solid rgba(201,168,76,0.15)' : 'none' }}>
+              <strong style={{ color: 'var(--pg-gold)', fontSize: '15px' }}>{pd.nombre || '—'}</strong>
+              {pd.aka?.trim() && (
+                <><br /><span style={{ fontSize: '12px', color: 'rgba(201,168,76,0.6)', fontStyle: 'italic' }}>
+                  también {pd.genero === 'F' ? 'conocida' : 'conocido'} como {pd.aka.trim().toUpperCase()}
+                </span></>
+              )}
+              <br />
+              <span style={{ fontSize: '13px' }}>
+                {[pd.nacionalidad, (pd.genero === 'F' ? ESTADO_CIVIL_LABELS[pd.estadoCivil]?.esF : ESTADO_CIVIL_LABELS[pd.estadoCivil]?.es), pd.ocupacion?.split(' / ')[0]].filter(Boolean).join(' · ')}
+              </span>
+              {(pd.pasaporte || pd.fechaNacimiento) && (
+                <><br />
+                <span style={{ fontSize: '12px', color: 'rgba(245,240,232,0.6)' }}>
+                  {pd.pasaporte && `Pasaporte: ${pd.pasaporte}`}
+                  {pd.pasaporte && pd.fechaNacimiento && '  ·  '}
+                  {pd.fechaNacimiento && `Nac: ${pd.fechaNacimiento}`}
+                </span></>
+              )}
+              {pd.domicilio && (
+                <><br /><span style={{ fontSize: '12px', color: 'rgba(245,240,232,0.6)' }}>{pd.domicilio}</span></>
+              )}
+            </div>
+          ))}
         </PreviewSection>
 
         {/* Apoderados */}
