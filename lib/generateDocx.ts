@@ -469,7 +469,11 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
         const ecEN = ESTADO_CIVIL_LABELS[pd.estadoCivil]?.en ?? pd.estadoCivil;
         const ocuEN = pd.ocupacion?.includes('/') ? (pd.ocupacion.split(' / ')[1]?.trim() || pd.ocupacion) : pd.ocupacion;
         const nacENval = nacENfn(pd.nacionalidad);
-        const akaStr = pd.aka?.trim() ? `, also known as ${pd.aka.trim().toUpperCase()}` : '';
+        const akaStr = pd.aka?.trim()
+          ? isFR
+            ? `, également ${pd.genero === 'F' ? 'connue' : 'connu'} sous le nom de ${pd.aka.trim().toUpperCase()}`
+            : `, also known as ${pd.aka.trim().toUpperCase()}`
+          : '';
         const pasStr = pd.pasaporte
           ? `, identified with ${pd.genero === 'F' ? 'her' : 'his'} ${nacENval} Passport number ${pd.pasaporte}${pd.fechaNacimiento ? `, born ${fmtFecha(pd.fechaNacimiento)}` : ''}`
           : '';
