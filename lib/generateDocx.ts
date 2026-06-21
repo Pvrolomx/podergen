@@ -454,30 +454,31 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // ── Proemio — varía según modoProemio ──────────────────────────
     ...((): TableRow[] => {
       // Construir los generales de cada poderdante para el proemio
+      // Retorna [prefijo_aka, nombre_aka, sufijo_generales]
+      // nombre_aka va en bold, el resto en texto normal
       const buildGeneralesES = (pd: typeof todosLosPoderdantes[0]) => {
         const ecES = (pd.genero === 'F' ? ESTADO_CIVIL_LABELS[pd.estadoCivil]?.esF : ESTADO_CIVIL_LABELS[pd.estadoCivil]?.es) ?? pd.estadoCivil;
         const ocuES = pd.ocupacion ? pd.ocupacion.split(' / ')[0].trim() : '';
         const nacES = nacESfn(pd.nacionalidad);
         const nacidoA = pd.genero === 'F' ? 'nacida' : 'nacido';
-        const akaStr = pd.aka?.trim() ? `, también ${pd.genero === 'F' ? 'conocida' : 'conocido'} como ${pd.aka.trim().toUpperCase()}` : '';
         const pasStr = pd.pasaporte
           ? `, quien se identifica con su Pasaporte ${nacES} número ${pd.pasaporte}${pd.fechaNacimiento ? `, ${nacidoA} el ${fmtFecha(pd.fechaNacimiento)}` : ''}`
           : '';
-        return `${akaStr}, de nacionalidad ${nacES}, mayor de edad, ${ecES.toLowerCase()}${ocuES ? `, de ocupación ${ocuES}` : ''}${pasStr}${pd.domicilio ? `, con domicilio en ${pd.domicilio}` : ''}`;
+        const generales = `, de nacionalidad ${nacES}, mayor de edad, ${ecES.toLowerCase()}${ocuES ? `, de ocupación ${ocuES}` : ''}${pasStr}${pd.domicilio ? `, con domicilio en ${pd.domicilio}` : ''}`;
+        return { aka: pd.aka?.trim() || null, akaPrefix: `, también ${pd.genero === 'F' ? 'conocida' : 'conocido'} como `, generales };
       };
       const buildGeneralesEN = (pd: typeof todosLosPoderdantes[0]) => {
         const ecEN = ESTADO_CIVIL_LABELS[pd.estadoCivil]?.en ?? pd.estadoCivil;
         const ocuEN = pd.ocupacion?.includes('/') ? (pd.ocupacion.split(' / ')[1]?.trim() || pd.ocupacion) : pd.ocupacion;
         const nacENval = nacENfn(pd.nacionalidad);
-        const akaStr = pd.aka?.trim()
-          ? isFR
-            ? `, également ${pd.genero === 'F' ? 'connue' : 'connu'} sous le nom de ${pd.aka.trim().toUpperCase()}`
-            : `, also known as ${pd.aka.trim().toUpperCase()}`
-          : '';
         const pasStr = pd.pasaporte
           ? `, identified with ${pd.genero === 'F' ? 'her' : 'his'} ${nacENval} Passport number ${pd.pasaporte}${pd.fechaNacimiento ? `, born ${fmtFecha(pd.fechaNacimiento)}` : ''}`
           : '';
-        return `${akaStr}, ${nacENval} national, of legal age, ${ecEN.toLowerCase()}${ocuEN ? `, occupation: ${ocuEN}` : ''}${pasStr}${pd.domicilio ? `, with address at ${pd.domicilio}` : ''}`;
+        const generales = `, ${nacENval} national, of legal age, ${ecEN.toLowerCase()}${ocuEN ? `, occupation: ${ocuEN}` : ''}${pasStr}${pd.domicilio ? `, with address at ${pd.domicilio}` : ''}`;
+        const akaPrefix = isFR
+          ? `, également ${pd.genero === 'F' ? 'connue' : 'connu'} sous le nom de `
+          : `, also known as `;
+        return { aka: pd.aka?.trim() || null, akaPrefix, generales };
       };
 
       if (data.modoProemio === 'suscrito') {
@@ -488,14 +489,16 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
         todosLosPoderdantes.forEach((pd, i) => {
           const isLast = i === todosLosPoderdantes.length - 1;
           const isSecondToLast = i === todosLosPoderdantes.length - 2;
+          const gES = buildGeneralesES(pd);
+          const gEN = buildGeneralesEN(pd);
+          const sufES = isLast ? `, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:` : isSecondToLast ? ', y ' : ', ';
+          const sufEN = isLast ? `, ${multiple ? 'appeared' : 'appeared'} to:` : isSecondToLast ? ', and ' : ', ';
           segsES.push({ text: pd.nombre.toUpperCase(), bold: true });
-          segsES.push({ text: buildGeneralesES(pd) + (isLast
-            ? `, ${multiple ? 'comparecemos' : 'comparezco'} a fin de:`
-            : isSecondToLast ? ', y ' : ', ') });
+          if (gES.aka) { segsES.push({ text: gES.akaPrefix }); segsES.push({ text: gES.aka.toUpperCase(), bold: true }); }
+          segsES.push({ text: gES.generales + sufES });
           segsEN.push({ text: pd.nombre.toUpperCase(), bold: true });
-          segsEN.push({ text: buildGeneralesEN(pd) + (isLast
-            ? `, ${multiple ? 'appeared' : 'appeared'} to:`
-            : isSecondToLast ? ', and ' : ', ') });
+          if (gEN.aka) { segsEN.push({ text: gEN.akaPrefix }); segsEN.push({ text: gEN.aka.toUpperCase(), bold: true }); }
+          segsEN.push({ text: gEN.generales + sufEN });
         });
         return [biRowRich(segsES, segsEN)];
       }
@@ -507,29 +510,44 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
         todosLosPoderdantes.forEach((pd, i) => {
           const isLast = i === todosLosPoderdantes.length - 1;
           const isSecondToLast = i === todosLosPoderdantes.length - 2;
+          const gES = buildGeneralesES(pd);
+          const gEN = buildGeneralesEN(pd);
           segsES.push({ text: pd.nombre.toUpperCase(), bold: true });
-          segsES.push({ text: buildGeneralesES(pd) + (isLast ? ', a fin de:' : isSecondToLast ? ', y ' : ', ') });
+          if (gES.aka) { segsES.push({ text: gES.akaPrefix }); segsES.push({ text: gES.aka.toUpperCase(), bold: true }); }
+          segsES.push({ text: gES.generales + (isLast ? ', a fin de:' : isSecondToLast ? ', y ' : ', ') });
           segsEN.push({ text: pd.nombre.toUpperCase(), bold: true });
-          segsEN.push({ text: buildGeneralesEN(pd) + (isLast ? ', appeared before me to:' : isSecondToLast ? ', and ' : ', ') });
+          if (gEN.aka) { segsEN.push({ text: gEN.akaPrefix }); segsEN.push({ text: gEN.aka.toUpperCase(), bold: true }); }
+          segsEN.push({ text: gEN.generales + (isLast ? ', appeared before me to:' : isSecondToLast ? ', and ' : ', ') });
         });
         return [biRowRich(segsES, segsEN)];
       }
 
       // Notarial singular: un poderdante con sus generales integrados
       const pd0 = todosLosPoderdantes[0];
-      return [biRowRich(
-        [{ text: 'El Notario Público que autoriza, certifica: que ante mí compareció ' }, { text: pd0.nombre.toUpperCase(), bold: true }, { text: buildGeneralesES(pd0) + ', a fin de:' }],
-        [{ text: 'The Notary Public who authorizes certifies that: ' }, { text: pd0.nombre.toUpperCase(), bold: true }, { text: buildGeneralesEN(pd0) + ', appeared before me to:' }],
-      )];
+      const g0ES = buildGeneralesES(pd0);
+      const g0EN = buildGeneralesEN(pd0);
+      const segs0ES: {text:string;bold?:boolean}[] = [
+        { text: 'El Notario Público que autoriza, certifica: que ante mí compareció ' },
+        { text: pd0.nombre.toUpperCase(), bold: true },
+        ...(g0ES.aka ? [{ text: g0ES.akaPrefix }, { text: g0ES.aka.toUpperCase(), bold: true }] : []),
+        { text: g0ES.generales + ', a fin de:' },
+      ];
+      const segs0EN: {text:string;bold?:boolean}[] = [
+        { text: 'The Notary Public who authorizes certifies that: ' },
+        { text: pd0.nombre.toUpperCase(), bold: true },
+        ...(g0EN.aka ? [{ text: g0EN.akaPrefix }, { text: g0EN.aka.toUpperCase(), bold: true }] : []),
+        { text: g0EN.generales + ', appeared before me to:' },
+      ];
+      return [biRowRich(segs0ES, segs0EN)];
     })(),
     biRow('HACER CONSTAR:', col2('RECORD:', FR.hacerConstar), { bold: true, center: true }),
     biRowRich(
       data.modoProemio === 'suscrito'
-        ? [{ text: `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgamos y formalizamos' : 'otorgo y formalizo'} a favor de ` }, { text: apoderadosStr, bold: true }, { text: ', de acuerdo con las siguientes:' }]
-        : [{ text: `El ${tipoES}, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgan y formalizan' : 'otorga y formaliza'} a favor de ` }, { text: apoderadosStr, bold: true }, { text: ', de acuerdo con las siguientes:' }],
+        ? [{ text: 'El ' }, { text: tipoES, bold: true }, { text: `, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgamos y formalizamos' : 'otorgo y formalizo'} a favor de ` }, { text: apoderadosStr, bold: true }, { text: ', de acuerdo con las siguientes:' }]
+        : [{ text: 'El ' }, { text: tipoES, bold: true }, { text: `, especial en cuanto a su objeto, pero general en cuanto a sus facultades que en este acto ${multiple ? 'otorgan y formalizan' : 'otorga y formaliza'} a favor de ` }, { text: apoderadosStr, bold: true }, { text: ', de acuerdo con las siguientes:' }],
       data.modoProemio === 'suscrito'
-        ? [{ text: `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is hereby granted and formalized in favor of ` }, { text: apoderadosStr, bold: true }, { text: ', according to the following:' }]
-        : [{ text: `The ${tipoEN}, special in as much as its purpose but general in as much as its capacities, that is granted and formalized through this act in favor of ` }, { text: apoderadosStr, bold: true }, { text: ', according to the following:' }],
+        ? [{ text: 'The ' }, { text: tipoEN, bold: true }, { text: ', special in as much as its purpose but general in as much as its capacities, that is hereby granted and formalized in favor of ' }, { text: apoderadosStr, bold: true }, { text: ', according to the following:' }]
+        : [{ text: 'The ' }, { text: tipoEN, bold: true }, { text: ', special in as much as its purpose but general in as much as its capacities, that is granted and formalized through this act in favor of ' }, { text: apoderadosStr, bold: true }, { text: ', according to the following:' }],
     ),
 
     // ===== CLÁUSULAS =====
@@ -538,8 +556,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     // PRIMERA
     headerRow('PRIMERA.- OTORGAMIENTO DE PODER', col2('FIRST.- GRANTING OF POWERS OF ATTORNEY', FR.primeraHeader)),
     biRowRich(
-      [{ text: poderdantesStr, bold: true }, { text: `, ${data.modoProemio === "suscrito" ? (multiple ? "otorgamos" : "otorgo") : (multiple ? "otorgan" : "otorga")} ${tipoES}, en favor de ` }, { text: apoderadosStr, bold: true }, { text: `, para que ${apoEjercite}${apoConjunta} en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; ${apoPodrán} firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto ${seLeOtorga} y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.` }],
-      [{ text: poderdantesStr, bold: true }, { text: `, ${data.modoProemio === "suscrito" ? (multiple ? "hereby grant" : "hereby grants") : (multiple ? "grant" : "grants")} ${tipoEN} in favor of ` }, { text: apoderadosStr, bold: true }, { text: `, to be exercised${apoJointly} in terms authorized by paragraphs second and third of article 2554 of the Federal Civil Code, and their equivalent in the further entities of the Republic and the Protocol On Uniform Legal Provisions. For powers of attorney approved with resolution XLVIII of the Seventh International American Conference of the PanAmerican Union, signed on May 7th, 1953, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the Mexican United States on December 22nd, 1951, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the United Mexican States on June 12th, 1953. Having deposited the instrument of ratification with the Secretary General of the Organization of American States on June 24th, 1953; and published in the Official Journal of the Federation on December 3rd, 1953. In accordance with the Interamerican Convention on the Legal Regime of Powers of Attorney to be used abroad, issued by the Organization of American States on January 30th, 1975 and adopted by Mexico according to publication made in the Official Journal of the Federation on February 6th, 1987; and in accordance with the Federal Civil Code and all articles relating to the various Civil Codes of the Federal Entities of the United Mexican States; ${apoTheProxy} sign the public or private documentation that may be necessary to exercise this power, with the amplest capacities to achieve the purpose of the Power in this act granted and may be exercised before Private Persons, or Administrative, Judicial Authorities, whose jurisdiction be Federal, State, or Municipal.` }],
+      [{ text: poderdantesStr, bold: true }, { text: `, ${data.modoProemio === "suscrito" ? (multiple ? "otorgamos" : "otorgo") : (multiple ? "otorgan" : "otorga")} ` }, { text: tipoES, bold: true }, { text: ', en favor de ' }, { text: apoderadosStr, bold: true }, { text: `, para que ${apoEjercite}${apoConjunta} en los términos que autorizan los párrafos primero, segundo y tercero del artículo 2554 (dos mil quinientos cincuenta y cuatro) del Código Civil Federal, y sus equivalentes en los demás entidades de la República y el Protocolo sobre Uniformidad del Régimen Legal de los poderes, aprobado en la resolución XLVIII de la Séptima Conferencia Internacional Americana de la Unión Panamericana, firmada por México ad referendum el 7 de mayo de 1953, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 22 de diciembre de 1951, según Decreto publicado en el Diario Oficial de la Federación el 2 de febrero de 1952; ratificado por el Ejecutivo Federal de los Estados Unidos Mexicanos el 12 de junio de 1953, habiéndose depositado el instrumento de ratificación ante la Secretaría General de la Organización de los Estados Americanos el 24 de junio de 1953 y publicado en el Diario Oficial de la Federación el 3 de diciembre de 1953; de acuerdo con la Convención Interamericana sobre el régimen legal de poderes para ser utilizados en el extranjero, aprobada por la Organización de los Estados Americanos con fecha 30 de enero de 1975, y adoptada por México mediante publicación en el Diario Oficial de la Federación con fecha 6 de febrero de 1987; de conformidad con el Código Civil Federal y los artículos correlativos de los diversos Códigos Civiles de las Entidades Federativas de los Estados Unidos Mexicanos; ${apoPodrán} firmar la documentación pública o privada que sea necesaria para el ejercicio del presente poder, con las más amplias facultades hasta lograr el objeto del Poder que en este acto ${seLeOtorga} y podrá ser ejercitado ante Particulares, o ante Autoridades Administrativas, Judiciales cuya jurisdicción sea Federal, Estatal o Municipal.` }],
+      [{ text: poderdantesStr, bold: true }, { text: `, ${data.modoProemio === "suscrito" ? (multiple ? "hereby grant" : "hereby grants") : (multiple ? "grant" : "grants")} ` }, { text: tipoEN, bold: true }, { text: ' in favor of ' }, { text: apoderadosStr, bold: true }, { text: `, to be exercised${apoJointly} in terms authorized by paragraphs second and third of article 2554 of the Federal Civil Code, and their equivalent in the further entities of the Republic and the Protocol On Uniform Legal Provisions. For powers of attorney approved with resolution XLVIII of the Seventh International American Conference of the PanAmerican Union, signed on May 7th, 1953, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the Mexican United States on December 22nd, 1951, as per decree published in the Federation's Official Journal of February 2nd, 1952. Ratified by the Federal Executive of the United Mexican States on June 12th, 1953. Having deposited the instrument of ratification with the Secretary General of the Organization of American States on June 24th, 1953; and published in the Official Journal of the Federation on December 3rd, 1953. In accordance with the Interamerican Convention on the Legal Regime of Powers of Attorney to be used abroad, issued by the Organization of American States on January 30th, 1975 and adopted by Mexico according to publication made in the Official Journal of the Federation on February 6th, 1987; and in accordance with the Federal Civil Code and all articles relating to the various Civil Codes of the Federal Entities of the United Mexican States; ${apoTheProxy} sign the public or private documentation that may be necessary to exercise this power, with the amplest capacities to achieve the purpose of the Power in this act granted and may be exercised before Private Persons, or Administrative, Judicial Authorities, whose jurisdiction be Federal, State, or Municipal.` }],
     ),
 
     // SEGUNDA
