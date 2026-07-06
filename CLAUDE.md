@@ -56,7 +56,8 @@ Nunca commitear secrets. `.env*` está en `.gitignore`.
 - Campo "también conocido(a) como" (AKA) por poderdante
 - Apoderados múltiples con concordancia singular/plural
 - Régimen legal: Nayarit (Arts. 1926/1927) o Jalisco (Arts. 2207/2204/2244)
-- Columna derecha EN o FR (toggle en header)
+- Idioma del documento — toggle ES | EN | FR en el header. `ES` = modo "Solo Español" (DOCX de una sola columna, sin divisor); EN/FR = columna derecha bilingüe
+- Folio Real opcional (Paso 2, tarjeta de fideicomiso) con municipio del RPP (Bahía de Banderas / Puerto Vallarta) → párrafo tras la cuenta predial
 - 14 facultades con subjuntivo automático según número de apoderados
 - Fideicomiso o escritura — RPP Nayarit y Jalisco
 - Certificación notarial o modo suscrito
@@ -70,7 +71,8 @@ Nunca commitear secrets. `.env*` está en `.gitignore`.
 ## Estado y mantenimiento
 - ✅ `tsconfig.tsbuildinfo` desindexado y agregado a `.gitignore` (commit `7426c6a`).
 - ✅ **Auditoría de código (jul 2026):** 9 fixes funcionales (`1ebae2c`) + limpieza de código muerto (`0899674`). Cubrió: título EN/ES duplicado, subjuntivo de facultades, `fmtFecha` con ISO, nacionalidad "Otra" inalcanzable, pérdida de género con "Retirado", merge de borradores viejos con defaults.
-- ⚠️ **Pendiente:** `npm ci` reporta 2 vulnerabilidades (1 crítica, 1 moderada) en dependencias. Investigar antes de tocar `package.json` (¿fix disponible?, ¿breaking?).
+- ✅ **Vulnerabilidades npm (jul 2026):** fix quirúrgico (`966fb55`) — `next` `14.2.5 → ^14.2.35` (elimina la CRÍTICA, bump de patch sin breaking) + `postcss` `→ 8.5.16`.
+- ⚠️ **Residual diferido:** quedan 1 HIGH + 1 MODERATE que Next.js solo corrige en el major `16.2.10` (breaking). La migración a **Next 16** es un proyecto aparte con testing dedicado — NO se hace en caliente. Evaluación pendiente antes de ejecutar.
 - Antes de commitear cambios de código: `npm run build` debe compilar y pasar el typecheck (es el mismo check que corre Vercel al desplegar).
 
 ## Hermanos del proyecto
