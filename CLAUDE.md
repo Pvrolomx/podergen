@@ -67,13 +67,11 @@ Nunca commitear secrets. `.env*` está en `.gitignore`.
 - Generales del poderdante integrados en el proemio (un párrafo fluido)
 - Firma individual por poderdante con AKA en itálica
 
-## Artefactos a limpiar
-- `tsconfig.tsbuildinfo` está committeado — agregar a `.gitignore` y eliminar del tracking:
-
-```
-git rm --cached tsconfig.tsbuildinfo
-```
-Agregar línea `tsconfig.tsbuildinfo` al `.gitignore`.
+## Estado y mantenimiento
+- ✅ `tsconfig.tsbuildinfo` desindexado y agregado a `.gitignore` (commit `7426c6a`).
+- ✅ **Auditoría de código (jul 2026):** 9 fixes funcionales (`1ebae2c`) + limpieza de código muerto (`0899674`). Cubrió: título EN/ES duplicado, subjuntivo de facultades, `fmtFecha` con ISO, nacionalidad "Otra" inalcanzable, pérdida de género con "Retirado", merge de borradores viejos con defaults.
+- ⚠️ **Pendiente:** `npm ci` reporta 2 vulnerabilidades (1 crítica, 1 moderada) en dependencias. Investigar antes de tocar `package.json` (¿fix disponible?, ¿breaking?).
+- Antes de commitear cambios de código: `npm run build` debe compilar y pasar el typecheck (es el mismo check que corre Vercel al desplegar).
 
 ## Hermanos del proyecto
 PoderGen es parte del ecosistema Expat Advisor MX junto con:
