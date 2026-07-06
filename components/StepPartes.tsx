@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { PoderData, TipoPoder, ModoProemio, RegimenEstado, Poderdante, Genero } from '@/types/poder';
+import type { PoderData, TipoPoder, RegimenEstado, Poderdante, Genero } from '@/types/poder';
 import { TIPO_PODER_LABELS } from '@/types/poder';
 interface Props {
   data: PoderData;
@@ -10,11 +10,7 @@ interface Props {
 }
 
 export default function StepPartes({ data, updateData, onNext }: Props) {
-  const { poderdante, apoderados, tipos } = data;
-
-  const updatePoderdante = (field: string, value: string) => {
-    updateData({ poderdante: { ...poderdante, [field]: value } });
-  };
+  const { apoderados, tipos } = data;
 
   const updateApoderado = (idx: number, nombre: string) => {
     const newAps = [...apoderados];
@@ -103,14 +99,6 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
       updateData({ tipos: [...tipos, t] });
     }
   };
-
-  const canContinue =
-    poderdante.nombre.trim() &&
-    poderdante.nacionalidad.trim() &&
-    poderdante.pasaporte.trim() &&
-    poderdante.domicilio.trim() &&
-    apoderados.every((a) => a.nombre.trim()) &&
-    tipos.length > 0;
 
   return (
     <div>

@@ -163,18 +163,3 @@ export function buildPoderdantesStr(data: PoderData): string {
   const rest = todos.slice(0, -1);
   return `${rest.map(p => p.nombre.toUpperCase()).join(', ')} Y ${last.nombre.toUpperCase()}`;
 }
-
-/**
- * Género del grupo: 'M' si todos masculino o mixto, 'F' si todas femenino
- */
-export function getGeneroGrupo(data: PoderData): 'M' | 'F' {
-  const todos = data.poderdantes.length > 0 ? data.poderdantes : [data.poderdante];
-  return todos.every(p => p.genero === 'F') ? 'F' : 'M';
-}
-
-/**
- * ¿Hay más de un poderdante?
- */
-export function esMultiple(data: PoderData): boolean {
-  return (data.poderdantes?.length ?? 0) > 1;
-}

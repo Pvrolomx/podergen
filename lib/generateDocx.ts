@@ -18,7 +18,7 @@ import {
   NumberFormat,
 } from 'docx';
 import type { PoderData, Facultades } from '@/types/poder';
-import { buildConcordancia, buildApoderadosTexto, buildCertificacionTextos, buildPoderdantesStr, getGeneroGrupo, esMultiple } from '@/lib/concordancia';
+import { buildConcordancia, buildApoderadosTexto, buildCertificacionTextos, buildPoderdantesStr } from '@/lib/concordancia';
 import { FR } from '@/lib/traduccionesFR';
 import {
   ESTADO_CIVIL_LABELS,
@@ -253,11 +253,6 @@ function buildPoderTituloEN(data: PoderData): string {
   return 'POWER OF ATTORNEY FOR ' + joinWithAnd(tipos);
 }
 
-function getEstadoCivil(data: PoderData): { es: string; en: string } {
-  const ec = ESTADO_CIVIL_LABELS[data.poderdante.estadoCivil];
-  return { es: data.poderdante.genero === 'F' ? ec.esF : ec.es, en: ec.en };
-}
-
 function buildFacultadesText(facultades: Facultades): { es: string; en: string } {
   const esItems: string[] = [];
   const enItems: string[] = [];
@@ -348,7 +343,6 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   const propiedadPodEN = multPod ? 'owned by the grantors' : 'owned by the grantor';
   // "se le otorga" vs "se les otorga"
   const seLeOtorga   = multPod ? 'se les otorga' : 'se le otorga';
-  const seLeOtorgaEN = multPod ? 'hereby granted to them' : 'hereby granted';
   const ct = buildCertificacionTextos(
     { ...data, poderdante: { ...todosLosPoderdantes[0], fechaNacimiento: fmtFecha(todosLosPoderdantes[0].fechaNacimiento) } },
     c,

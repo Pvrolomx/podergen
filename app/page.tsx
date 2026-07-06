@@ -265,10 +265,6 @@ export default function Home() {
             ▶ Demo
           </button>
         </div>
-
-        <div style={{ fontSize: '12px', color: 'rgba(245,240,232,0.4)', textAlign: 'right', display: 'none' }}>
-          <div>expatadvisormx.com</div>
-        </div>
       </header>
 
       {/* Demo banner — limpio, navegación vía step dots */}
