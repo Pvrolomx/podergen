@@ -20,7 +20,7 @@ Generador de poderes notariales bilingüe (ES/EN) para transacciones inmobiliari
 
 - Wizard 4 pasos: Partes → Inmueble → Facultades → Generar
 - Documento bilingüe ES|EN en columnas paralelas
-- 12 facultades configurables via checkboxes
+- 14 facultades configurables via checkboxes
 - Artículos legales integrados (CCF + Código Civil Nayarit)
 - PWA instalable
 
