@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { PoderData, TipoPoder, ModoProemio, RegimenEstado, Poderdante } from '@/types/poder';
+import type { PoderData, TipoPoder, ModoProemio, RegimenEstado, Poderdante, Genero } from '@/types/poder';
 import { TIPO_PODER_LABELS } from '@/types/poder';
 interface Props {
   data: PoderData;
@@ -62,11 +62,17 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
     ? data.poderdantes
     : [data.poderdante];
 
-  const updatePoderdanteN = (idx: number, field: string, value: string) => {
+  // Escribe varios campos del poderdante idx en UNA sola actualización de estado.
+  // Evita que dos updatePoderdanteN encadenados se pisen (ambos parten del mismo snapshot).
+  const updatePoderdanteFields = (idx: number, patch: Partial<Poderdante>) => {
     const lista = [...todosLosPoderdantes];
-    lista[idx] = { ...lista[idx], [field]: value };
+    lista[idx] = { ...lista[idx], ...patch };
     // El primero siempre es el principal
     updateData({ poderdante: lista[0], poderdantes: lista });
+  };
+
+  const updatePoderdanteN = (idx: number, field: string, value: string) => {
+    updatePoderdanteFields(idx, { [field]: value } as Partial<Poderdante>);
   };
 
   const addPoderdante = () => {
@@ -165,11 +171,13 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                 <div>
                   <label className="pg-label">Género / Gender</label>
                   <select className="pg-select" value={pd.genero} onChange={(e) => {
-                      updatePoderdanteN(idx, 'genero', e.target.value);
-                      // Si ya tiene Retirado/a, actualizar concordancia
+                      const nuevoGenero = e.target.value as Genero;
+                      const patch: Partial<Poderdante> = { genero: nuevoGenero };
+                      // Si ya tiene Retirado/a, actualizar concordancia en la MISMA escritura
                       if (pd.ocupacion.startsWith('Retirad')) {
-                        updatePoderdanteN(idx, 'ocupacion', e.target.value === 'F' ? 'Retirada / Retired' : 'Retirado / Retired');
+                        patch.ocupacion = nuevoGenero === 'F' ? 'Retirada / Retired' : 'Retirado / Retired';
                       }
+                      updatePoderdanteFields(idx, patch);
                     }}>
                     <option value="M">Masculino / Male</option>
                     <option value="F">Femenino / Female</option>
@@ -179,12 +187,14 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                   <label className="pg-label">Nacionalidad / Nationality</label>
                   <select className="pg-select" value={
                     ['estadounidense','canadiense','mexicana'].includes(pd.nacionalidad.toLowerCase())
-                      ? pd.nacionalidad.toLowerCase() : pd.nacionalidad ? 'otra' : ''
+                      ? pd.nacionalidad.toLowerCase() : pd.nacionalidad === '' ? '' : 'otra'
                   } onChange={(e) => {
-                    if (e.target.value === 'otra') updatePoderdanteN(idx, 'nacionalidad', '');
+                    // ' ' (centinela) = "Otra" elegida pero aún sin texto → mantiene el input visible
+                    if (e.target.value === 'otra') updatePoderdanteN(idx, 'nacionalidad', ' ');
                     else if (e.target.value === 'estadounidense') updatePoderdanteN(idx, 'nacionalidad', 'Estadounidense');
                     else if (e.target.value === 'canadiense') updatePoderdanteN(idx, 'nacionalidad', 'Canadiense');
                     else if (e.target.value === 'mexicana') updatePoderdanteN(idx, 'nacionalidad', 'Mexicana');
+                    else updatePoderdanteN(idx, 'nacionalidad', '');
                   }}>
                     <option value="">— Seleccionar —</option>
                     <option value="estadounidense">Estadounidense / American</option>
@@ -192,9 +202,10 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                     <option value="mexicana">Mexicana / Mexican</option>
                     <option value="otra">Otra / Other</option>
                   </select>
-                  {pd.nacionalidad && !['Estadounidense','Canadiense','Mexicana'].includes(pd.nacionalidad) && (
-                    <input className="pg-input" placeholder="ej. Británica / British" value={pd.nacionalidad}
+                  {pd.nacionalidad !== '' && !['estadounidense','canadiense','mexicana'].includes(pd.nacionalidad.toLowerCase()) && (
+                    <input className="pg-input" placeholder="ej. Británica / British" value={pd.nacionalidad.trimStart()}
                       onChange={(e) => updatePoderdanteN(idx, 'nacionalidad', e.target.value)}
+                      autoFocus
                       style={{ marginTop: '6px' }} />
                   )}
                 </div>
@@ -213,7 +224,7 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                 <div>
                   <label className="pg-label">Ocupación / Occupation</label>
                   <select className="pg-select" value={
-                    pd.ocupacion.startsWith('Retirado') ? 'retirado'
+                    pd.ocupacion.startsWith('Retirad') ? 'retirado'
                     : pd.ocupacion === '' ? '' : 'otra'
                   } onChange={(e) => {
                     if (e.target.value === 'retirado') updatePoderdanteN(idx, 'ocupacion', pd.genero === 'F' ? 'Retirada / Retired' : 'Retirado / Retired');
@@ -224,7 +235,7 @@ export default function StepPartes({ data, updateData, onNext }: Props) {
                     <option value="retirado">Retirado(a) / Retired</option>
                     <option value="otra">Otra / Other</option>
                   </select>
-                  {!pd.ocupacion.startsWith('Retirado') && pd.ocupacion !== '' && (
+                  {!pd.ocupacion.startsWith('Retirad') && pd.ocupacion !== '' && (
                     <div style={{ position: 'relative', marginTop: '6px' }}>
                       <input className="pg-input"
                         placeholder="ej. Gerente / Manager"

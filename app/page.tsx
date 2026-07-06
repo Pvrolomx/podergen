@@ -16,6 +16,19 @@ const STEPS = [
   { num: 4, label: 'Generar', labelEn: 'Generate' },
 ];
 
+// Rellena con los valores por defecto los campos ausentes de un borrador viejo.
+// Sin esto, un borrador de un esquema anterior podría dejar objetos anidados
+// (facultades / inmueble / poderdante) en undefined y romper la generación del DOCX.
+function mergeDefaults(d: any): PoderData {
+  return {
+    ...DEFAULT_PODER,
+    ...d,
+    poderdante: { ...DEFAULT_PODER.poderdante, ...(d?.poderdante ?? {}) },
+    inmueble: { ...DEFAULT_PODER.inmueble, ...(d?.inmueble ?? {}) },
+    facultades: { ...DEFAULT_PODER.facultades, ...(d?.facultades ?? {}) },
+  };
+}
+
 export default function Home() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<PoderData>(DEFAULT_PODER);
@@ -50,7 +63,7 @@ export default function Home() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.data) {
-          setData(parsed.data);
+          setData(mergeDefaults(parsed.data));
           if (typeof parsed.step === 'number') setStep(parsed.step);
         }
       }
@@ -93,11 +106,11 @@ export default function Home() {
         const text = await file.text();
         const parsed = JSON.parse(text);
         if (parsed.data) {
-          setData(parsed.data);
+          setData(mergeDefaults(parsed.data));
           if (typeof parsed.step === 'number') setStep(parsed.step);
           setIsDemo(false);
         } else {
-          setData(parsed); // legacy
+          setData(mergeDefaults(parsed)); // legacy
         }
       } catch {
         alert('Error al cargar el archivo. Verifica que sea un borrador válido de PoderGen (.json).');

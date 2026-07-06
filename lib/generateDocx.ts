@@ -215,18 +215,17 @@ const NAC_ES_MAP: Record<string, string> = {
 function nacENfn(nac: string): string { return NAC_EN_MAP[nac.toLowerCase()] || nac; }
 function nacESfn(nac: string): string { return NAC_ES_MAP[nac.toLowerCase()] || nac; }
 
-// Formatea fecha de nacimiento: "14121947" → "14/12/1947", "2024-12-14" → "14/12/2024"
+// Formatea fecha de nacimiento: "14121947" → "14/12/1947", "1947-12-14" → "14/12/1947"
 function fmtFecha(f: string): string {
   if (!f) return '';
+  // ISO YYYY-MM-DD → DD/MM/YYYY. Debe evaluarse ANTES del bloque de 8 dígitos,
+  // porque "1947-12-14" sin guiones también son 8 dígitos y se malinterpretaría como DDMMYYYY.
+  const iso = f.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
   const clean = f.replace(/[^0-9]/g, '');
   if (clean.length === 8) {
     // DDMMYYYY (más común en datos del usuario)
     return `${clean.slice(0,2)}/${clean.slice(2,4)}/${clean.slice(4,8)}`;
-  }
-  if (f.includes('-')) {
-    // YYYY-MM-DD → DD/MM/YYYY
-    const parts = f.split('-');
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
   return f; // ya está formateado
 }
@@ -243,12 +242,14 @@ function joinWithAnd(items: string[]): string {
 }
 
 function buildPoderTitulo(data: PoderData): string {
-  const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].es);
-  return ('PODER PARA ' + joinConY(tipos)).replace('PODER PARA PODER PARA', 'PODER PARA');
+  // Se quita el prefijo "PODER PARA " embebido en cada etiqueta antes de unir,
+  // para anteponerlo una sola vez sin duplicarlo (independiente del orden de selección).
+  const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].es.replace(/^PODER PARA /, ''));
+  return 'PODER PARA ' + joinConY(tipos);
 }
 
 function buildPoderTituloEN(data: PoderData): string {
-  const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].en);
+  const tipos = data.tipos.map((t) => TIPO_PODER_LABELS[t].en.replace(/^POWER OF ATTORNEY FOR /, ''));
   return 'POWER OF ATTORNEY FOR ' + joinWithAnd(tipos);
 }
 
@@ -281,8 +282,8 @@ const INF_TO_SUBJ: Record<string, [string, string]> = {
   'Solicitar el cálculo':           ['solicite el cálculo',   'soliciten el cálculo'],
   'Adquirir':                       ['adquiera',              'adquieran'],
   'Girar':                          ['gire',                  'giren'],
-  'Llevar a cabo':                  ['lleven a cabo',         'lleven a cabo'],
-  'Ceder':                          ['ceda',                  'cedan'],
+  'Llevar a cabo':                  ['lleve a cabo',          'lleven a cabo'],
+  'Cesiones de derechos':           ['ceda derechos',         'cedan derechos'],
   'Realizar donaciones':            ['realice donaciones',    'realicen donaciones'],
   'Realizar convenios':             ['realice convenios',     'realicen convenios'],
   'Ejecución o ampliación':         ['ejecute o amplíe',      'ejecuten o amplíen'],
@@ -348,7 +349,10 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   // "se le otorga" vs "se les otorga"
   const seLeOtorga   = multPod ? 'se les otorga' : 'se le otorga';
   const seLeOtorgaEN = multPod ? 'hereby granted to them' : 'hereby granted';
-  const ct = buildCertificacionTextos({ ...data, poderdante: todosLosPoderdantes[0] }, c);
+  const ct = buildCertificacionTextos(
+    { ...data, poderdante: { ...todosLosPoderdantes[0], fechaNacimiento: fmtFecha(todosLosPoderdantes[0].fechaNacimiento) } },
+    c,
+  );
   // Textos plurales para el proemio
   const suscritos_ES = multiple
     ? (todosLosPoderdantes.every(p => p.genero === 'F') ? 'Las suscritas' : 'Los suscritos')
