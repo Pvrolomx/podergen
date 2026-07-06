@@ -278,6 +278,32 @@ export default function StepInmueble({ data, updateData, onNext, onPrev }: Props
             </div>
           </div>
 
+          {/* Folio Real — inscripción RPP opcional (independiente del RPP de escritura) */}
+          <div style={{ marginBottom: '16px' }}>
+            <label className="pg-label">
+              Folio Real / Folio Real
+              <span style={{ color: 'rgba(245,240,232,0.35)', fontWeight: 'normal', marginLeft: '6px', textTransform: 'none', letterSpacing: 0 }}>(opcional)</span>
+            </label>
+            <input
+              className="pg-input"
+              placeholder="ej. 4066318"
+              value={inmueble.folioReal || ''}
+              onChange={(e) => update('folioReal', e.target.value)}
+            />
+            {(inmueble.folioReal || '').trim() && (
+              <select
+                className="pg-select"
+                value={inmueble.municipioRPP || ''}
+                onChange={(e) => update('municipioRPP', e.target.value)}
+                style={{ marginTop: '8px' }}
+              >
+                <option value="">— Municipio del RPP (opcional) —</option>
+                <option value="bahia_banderas">Bahía de Banderas (Nayarit)</option>
+                <option value="puerto_vallarta">Puerto Vallarta (Jalisco)</option>
+              </select>
+            )}
+          </div>
+
           <div>
             <label className="pg-label">
               Banco Fiduciario

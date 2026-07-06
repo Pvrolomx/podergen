@@ -444,6 +444,25 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   const esFideicomiso = data.inmueble.modo === 'fideicomiso';
   const predialES = data.inmueble.cuentaPredial ? ` A dicho INMUEBLE le corresponde la cuenta predial ${data.inmueble.cuentaPredial}.` : '';
   const predialEN = data.inmueble.cuentaPredial ? ` To said PROPERTY corresponds Property Account No. ${data.inmueble.cuentaPredial}.` : '';
+  // Folio Real — párrafo opcional que va inmediatamente después de la cuenta predial.
+  // Si no hay folio → cadena vacía. Si hay folio pero no municipio → se omite la sede.
+  const folioRealNum = data.inmueble.folioReal?.trim() || '';
+  const muniRPP = data.inmueble.municipioRPP;
+  const folioRealES = !folioRealNum ? '' : (() => {
+    const sede = muniRPP === 'bahia_banderas' ? ' con sede en el Municipio de Bahía de Banderas, Estado de Nayarit,'
+      : muniRPP === 'puerto_vallarta' ? ' con sede en el Municipio de Puerto Vallarta, Estado de Jalisco,' : '';
+    return ` El INMUEBLE se encuentra debidamente inscrito ante el Registro Público de la Propiedad y de Comercio${sede} bajo el Folio Real número ${folioRealNum}.`;
+  })();
+  const folioRealEN = !folioRealNum ? '' : (() => {
+    const sede = muniRPP === 'bahia_banderas' ? ' with headquarters in the Municipality of Bahía de Banderas, State of Nayarit,'
+      : muniRPP === 'puerto_vallarta' ? ' with headquarters in the Municipality of Puerto Vallarta, State of Jalisco,' : '';
+    return ` The PROPERTY is duly registered before the Public Registry of Property and Commerce${sede} under Folio Real number ${folioRealNum}.`;
+  })();
+  const folioRealFR = !folioRealNum ? '' : (() => {
+    const sede = muniRPP === 'bahia_banderas' ? ' dont le siège est dans la Municipalité de Bahía de Banderas, État de Nayarit,'
+      : muniRPP === 'puerto_vallarta' ? ' dont le siège est dans la Municipalité de Puerto Vallarta, État de Jalisco,' : '';
+    return ` Le BIEN IMMOBILIER est dûment inscrit auprès du Registre Public de la Propriété et du Commerce${sede} sous le numéro de Folio Réel ${folioRealNum}.`;
+  })();
   const escrituraES = !esFideicomiso ? buildEscrituraParrafoES() : '';
   const escrituraEN = !esFideicomiso ? buildEscrituraParrafoEN() : '';
 
@@ -570,8 +589,8 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     ),
     biRow('INMUEBLE:', col2('PROPERTY:', FR.inmuebleLabel), { bold: true, center: true, shade: true }),
     biRow(
-      inmuebleDesc + predialES + (escrituraES ? ' ' + escrituraES : '') + ' EN ADELANTE EL INMUEBLE.',
-      col2(inmuebleDescEN + predialEN + (escrituraEN ? ' ' + escrituraEN : '') + ' HEREINAFTER THE PROPERTY.', inmuebleDesc + (data.inmueble.cuentaPredial ? ` ${FR.predial(data.inmueble.cuentaPredial)}` : '') + ' ' + FR.hereinafter),
+      inmuebleDesc + predialES + folioRealES + (escrituraES ? ' ' + escrituraES : '') + ' EN ADELANTE EL INMUEBLE.',
+      col2(inmuebleDescEN + predialEN + folioRealEN + (escrituraEN ? ' ' + escrituraEN : '') + ' HEREINAFTER THE PROPERTY.', inmuebleDesc + (data.inmueble.cuentaPredial ? ` ${FR.predial(data.inmueble.cuentaPredial)}` : '') + folioRealFR + ' ' + FR.hereinafter),
     ),
 
     // TERCERA

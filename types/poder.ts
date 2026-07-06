@@ -29,6 +29,8 @@ export interface Inmueble {
   fideicomisoNumero: string;
   bancoFiduciario: string;
   cuentaPredial: string;
+  folioReal?: string;
+  municipioRPP?: 'bahia_banderas' | 'puerto_vallarta' | '';
   escrituraNumero: string;
   escrituraFecha: string;
   escrituraNotario: string;
