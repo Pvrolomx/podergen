@@ -514,9 +514,9 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
 
       if (data.modoProemio === 'suscrito') {
         // Modo suscrito: todo en un solo párrafo encadenado
-        // "--- Los suscritos NOMBRE1, generales1, y NOMBRE2, generales2, comparecemos a fin de:"
-        const segsES: {text:string;bold?:boolean}[] = [{ text: `--- ${suscritos_ES} ` }];
-        const segsEN: {text:string;bold?:boolean}[] = [{ text: `--- ${suscritos_EN} ` }];
+        // "Los suscritos NOMBRE1, generales1, y NOMBRE2, generales2, comparecemos a fin de:"
+        const segsES: {text:string;bold?:boolean}[] = [{ text: `${suscritos_ES} ` }];
+        const segsEN: {text:string;bold?:boolean}[] = [{ text: `${suscritos_EN} ` }];
         todosLosPoderdantes.forEach((pd, i) => {
           const isLast = i === todosLosPoderdantes.length - 1;
           const isSecondToLast = i === todosLosPoderdantes.length - 2;
