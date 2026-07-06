@@ -198,9 +198,9 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Toggle EN / FR */}
+          {/* Toggle ES / EN / FR */}
           <div style={{ display: 'flex', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
-            {(['en', 'fr'] as IdiomaDoc[]).map((lang) => (
+            {(['es', 'en', 'fr'] as IdiomaDoc[]).map((lang) => (
               <button
                 key={lang}
                 onClick={() => updateData({ idiomaDoc: lang })}
@@ -211,7 +211,7 @@ export default function Home() {
                   fontWeight: 'bold',
                   letterSpacing: '0.08em',
                   border: 'none',
-                  borderRight: lang === 'en' ? '1px solid rgba(201,168,76,0.3)' : 'none',
+                  borderRight: lang !== 'fr' ? '1px solid rgba(201,168,76,0.3)' : 'none',
                   cursor: 'pointer',
                   background: data.idiomaDoc === lang ? 'rgba(201,168,76,0.2)' : 'transparent',
                   color: data.idiomaDoc === lang ? 'var(--pg-gold)' : 'rgba(245,240,232,0.4)',

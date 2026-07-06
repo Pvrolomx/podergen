@@ -27,7 +27,8 @@ import {
 } from '@/types/poder';
 
 // Helper: bilingual row donde el texto contiene \n → párrafos separados
-function multilineRow(es: string, en: string): TableRow {
+// solo=true → una sola columna ES (modo "Solo Español")
+function multilineRowImpl(es: string, en: string, solo = false): TableRow {
   const makeLines = (text: string): Paragraph[] =>
     text.split('\n').map(line =>
       new Paragraph({
@@ -39,13 +40,13 @@ function multilineRow(es: string, en: string): TableRow {
 
   const makeCell = (lines: Paragraph[], isLeft: boolean): TableCell =>
     new TableCell({
-      width: { size: 50, type: WidthType.PERCENTAGE },
+      width: { size: solo ? 100 : 50, type: WidthType.PERCENTAGE },
       shading: undefined,
       borders: {
         top: { style: BorderStyle.NONE, size: 0 },
         bottom: { style: BorderStyle.NONE, size: 0 },
         left: { style: BorderStyle.NONE, size: 0 },
-        right: isLeft
+        right: (!solo && isLeft)
           ? { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' }
           : { style: BorderStyle.NONE, size: 0 },
       },
@@ -53,6 +54,7 @@ function multilineRow(es: string, en: string): TableRow {
       children: lines,
     });
 
+  if (solo) return new TableRow({ children: [makeCell(makeLines(es), true)] });
   return new TableRow({
     children: [makeCell(makeLines(es), true), makeCell(makeLines(en), false)],
   });
@@ -62,15 +64,15 @@ function multilineRow(es: string, en: string): TableRow {
 // Permite negrita selectiva en nombres
 type Seg = { text: string; bold?: boolean };
 
-function biRowRich(esSegs: Seg[], enSegs: Seg[]): TableRow {
+function biRowRichImpl(esSegs: Seg[], enSegs: Seg[], solo = false): TableRow {
   const makeCell = (segs: Seg[], isLeft: boolean): TableCell =>
     new TableCell({
-      width: { size: 50, type: WidthType.PERCENTAGE },
+      width: { size: solo ? 100 : 50, type: WidthType.PERCENTAGE },
       borders: {
         top: { style: BorderStyle.NONE, size: 0 },
         bottom: { style: BorderStyle.NONE, size: 0 },
         left: { style: BorderStyle.NONE, size: 0 },
-        right: isLeft
+        right: (!solo && isLeft)
           ? { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' }
           : { style: BorderStyle.NONE, size: 0 },
       },
@@ -83,20 +85,23 @@ function biRowRich(esSegs: Seg[], enSegs: Seg[]): TableRow {
         }),
       ],
     });
+  if (solo) return new TableRow({ children: [makeCell(esSegs, true)] });
   return new TableRow({ children: [makeCell(esSegs, true), makeCell(enSegs, false)] });
 }
 
 // Helper: create a bilingual row (ES left, EN right)
-function biRow(
+type BiRowOpts = { bold?: boolean; center?: boolean; size?: number; shade?: boolean };
+function biRowImpl(
   es: string,
   en: string,
-  opts: { bold?: boolean; center?: boolean; size?: number; shade?: boolean } = {}
+  opts: BiRowOpts = {},
+  solo = false
 ): TableRow {
   const { bold = false, center = false, size = 18, shade = false } = opts;
 
   const makeCell = (text: string): TableCell =>
     new TableCell({
-      width: { size: 50, type: WidthType.PERCENTAGE },
+      width: { size: solo ? 100 : 50, type: WidthType.PERCENTAGE },
       shading: shade
         ? { type: ShadingType.SOLID, color: 'F0EAD8', fill: 'F0EAD8' }
         : undefined,
@@ -104,11 +109,9 @@ function biRow(
         top: { style: BorderStyle.NONE, size: 0 },
         bottom: { style: BorderStyle.NONE, size: 0 },
         left: { style: BorderStyle.NONE, size: 0 },
-        right: {
-          style: BorderStyle.SINGLE,
-          size: 6,
-          color: 'C9A84C',
-        },
+        right: solo
+          ? { style: BorderStyle.NONE, size: 0 }
+          : { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' },
       },
       margins: {
         top: 60,
@@ -132,22 +135,25 @@ function biRow(
       ],
     });
 
+  if (solo) return new TableRow({ children: [makeCell(es)] });
   return new TableRow({
     children: [makeCell(es), makeCell(en)],
   });
 }
 
 // Helper: section header row (gold background)
-function headerRow(esTitle: string, enTitle: string): TableRow {
+function headerRowImpl(esTitle: string, enTitle: string, solo = false): TableRow {
   const makeHeaderCell = (text: string): TableCell =>
     new TableCell({
-      width: { size: 50, type: WidthType.PERCENTAGE },
+      width: { size: solo ? 100 : 50, type: WidthType.PERCENTAGE },
       shading: { type: ShadingType.SOLID, color: 'E8D5A0', fill: 'E8D5A0' },
       borders: {
         top: { style: BorderStyle.NONE, size: 0 },
         bottom: { style: BorderStyle.NONE, size: 0 },
         left: { style: BorderStyle.NONE, size: 0 },
-        right: { style: BorderStyle.SINGLE, size: 6, color: '8B6914' },
+        right: solo
+          ? { style: BorderStyle.NONE, size: 0 }
+          : { style: BorderStyle.SINGLE, size: 6, color: '8B6914' },
       },
       margins: { top: 80, bottom: 80, left: 120, right: 120 },
       children: [
@@ -166,6 +172,7 @@ function headerRow(esTitle: string, enTitle: string): TableRow {
       ],
     });
 
+  if (solo) return new TableRow({ children: [makeHeaderCell(esTitle)] });
   return new TableRow({
     children: [makeHeaderCell(esTitle), makeHeaderCell(enTitle)],
   });
@@ -441,6 +448,13 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   // col2: helper para seleccionar EN o FR en la columna derecha
   // se llama como col2(textEN, textFR)
   const col2 = (en: string, fr: string) => isFR ? fr : en;
+  // Modo "Solo Español": una sola columna. Aliases locales que inyectan isSolo
+  // en los helpers de fila para no tocar los ~30 call sites.
+  const isSolo = data.idiomaDoc === 'es';
+  const biRow = (es: string, en: string, opts: BiRowOpts = {}) => biRowImpl(es, en, opts, isSolo);
+  const biRowRich = (esSegs: Seg[], enSegs: Seg[]) => biRowRichImpl(esSegs, enSegs, isSolo);
+  const headerRow = (es: string, en: string) => headerRowImpl(es, en, isSolo);
+  const multilineRow = (es: string, en: string) => multilineRowImpl(es, en, isSolo);
   const esFideicomiso = data.inmueble.modo === 'fideicomiso';
   const predialES = data.inmueble.cuentaPredial ? ` A dicho INMUEBLE le corresponde la cuenta predial ${data.inmueble.cuentaPredial}.` : '';
   const predialEN = data.inmueble.cuentaPredial ? ` To said PROPERTY corresponds Property Account No. ${data.inmueble.cuentaPredial}.` : '';
@@ -716,12 +730,12 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
 
   const sigCell = (children: Paragraph[], isLeft: boolean, topMargin = 160) =>
     new TableCell({
-      width: { size: 50, type: WidthType.PERCENTAGE },
+      width: { size: isSolo ? 100 : 50, type: WidthType.PERCENTAGE },
       borders: {
         top: { style: BorderStyle.NONE, size: 0 },
         bottom: { style: BorderStyle.NONE, size: 0 },
         left: { style: BorderStyle.NONE, size: 0 },
-        right: isLeft
+        right: (!isSolo && isLeft)
           ? { style: BorderStyle.SINGLE, size: 6, color: 'C9A84C' }
           : { style: BorderStyle.NONE, size: 0 },
       },
@@ -730,7 +744,9 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
     });
 
   const sigRow = (leftChildren: Paragraph[], rightChildren: Paragraph[], topMargin = 160) =>
-    new TableRow({ children: [sigCell(leftChildren, true, topMargin), sigCell(rightChildren, false, topMargin)] });
+    new TableRow({ children: isSolo
+      ? [sigCell(leftChildren, true, topMargin)]
+      : [sigCell(leftChildren, true, topMargin), sigCell(rightChildren, false, topMargin)] });
 
   // ── Nombres de poderdante(s) para la firma ────────────────────────
   const poderdantesFirmaNames: Paragraph[] = todosLosPoderdantes.map(p =>

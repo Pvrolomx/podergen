@@ -4,7 +4,7 @@ export type TipoPoder = 'pleitos_cobranzas' | 'administracion' | 'dominio';
 export type ModoTitulo = 'fideicomiso' | 'escritura';
 export type ModoProemio = 'notarial' | 'suscrito';
 export type RegimenEstado = 'nayarit' | 'jalisco';
-export type IdiomaDoc = 'en' | 'fr';
+export type IdiomaDoc = 'en' | 'fr' | 'es';
 
 export interface Poderdante {
   nombre: string;

@@ -58,7 +58,8 @@ export default function StepPreview({ data, onPrev }: Props) {
       const { generatePoderDocx } = await import('@/lib/generateDocx');
       const blob = await generatePoderDocx(data);
       const nombreLimpio = poderdante.nombre.replace(/\s+/g, '_').toUpperCase() || 'PODER';
-      const filename = `PODER_NOTARIAL_${nombreLimpio}.docx`;
+      const sufijoIdioma = data.idiomaDoc === 'es' ? '_ES' : data.idiomaDoc === 'fr' ? '_FR' : '';
+      const filename = `PODER_NOTARIAL_${nombreLimpio}${sufijoIdioma}.docx`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -247,7 +248,7 @@ export default function StepPreview({ data, onPrev }: Props) {
             disabled={loading}
             style={{ minWidth: '200px' }}
           >
-            {loading ? '⏳ Generando...' : generated ? '⬇ Descargar de nuevo' : '⬇ Generar DOCX Bilingüe'}
+            {loading ? '⏳ Generando...' : generated ? '⬇ Descargar de nuevo' : data.idiomaDoc === 'es' ? '⬇ Generar DOCX (Solo Español)' : '⬇ Generar DOCX Bilingüe'}
           </button>
         </div>
       </div>
