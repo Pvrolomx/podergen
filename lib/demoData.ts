@@ -65,6 +65,7 @@ export const DEMO_PODER: PoderData = {
     escrow: true,
     isr: true,
     sustitucionFiduciaria: false,
+    renuncia: false,
     autocontrato: false,
   },
   lugar: '',

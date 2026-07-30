@@ -71,6 +71,7 @@ export interface Facultades {
   escrow: boolean;
   isr: boolean;
   sustitucionFiduciaria: boolean;
+  renuncia: boolean;
   autocontrato: boolean;
 }
 
@@ -148,6 +149,7 @@ export const DEFAULT_PODER: PoderData = {
     escrow: true,
     isr: true,
     sustitucionFiduciaria: true,
+    renuncia: false,
     autocontrato: false,
   },
   lugar: '',
@@ -182,5 +184,6 @@ export const FACULTADES_LABELS: Record<keyof Facultades, { es: string; en: strin
   escrow: { es: 'Suscribir los formatos necesarios ante la empresa escrow correspondiente', en: 'Sign the necessary forms with the corresponding escrow company' },
   isr: { es: 'Solicitar el cálculo, la exención y deducción en términos de la Ley del ISR', en: 'Request estimate, exemption and deduction pursuant to the Capital Gains Tax Law' },
   sustitucionFiduciaria: { es: 'Solicitar y gestionar la sustitución del fiduciario, así como la transmisión del fideicomiso a otra institución fiduciaria', en: 'Request and manage the substitution of the trustee, as well as the transfer of the trust to another fiduciary institution' },
-  autocontrato: { es: 'Celebrar consigo mismo los actos jurídicos derivados del presente poder (autocontrato), incluyendo escriturar, adquirir o transmitir a su favor el inmueble objeto de este instrumento, sin que ello implique conflicto de intereses', en: 'Enter into transactions with himself/herself (self-dealing) arising from this power, including to execute the deed, acquire or transfer the property hereunder in their own favor, without this constituting a conflict of interest' },
+  renuncia: { es: 'Renunciar, de manera pura, simple, abdicativa e irrevocable, a la calidad y designación de Fideicomisario Sustituto que corresponde al poderdante en el fideicomiso mencionado, sin designar beneficiario ni transmitir derecho alguno', en: 'Renounce, in a pure, simple, abdicative and irrevocable manner, the capacity and designation of Substitute Trust Beneficiary (Fideicomisario Sustituto) held by the grantor in the aforementioned trust, without designating any beneficiary or transferring any right' },
+  autocontrato: { es: 'Celebrar consigo mismo los actos jurídicos derivados del presente poder (autocontrato), incluyendo escriturar, adquirir o transmitir a su favor el inmueble objeto de este instrumento, sin que ello implique conflicto de intereses, así como comparecer y renunciar en nombre del poderdante al reconocimiento de la fideicomisaria única, sin que ello implique adquisición ni transmisión', en: 'Enter into transactions with himself/herself (self-dealing) arising from this power, including to execute the deed, acquire or transfer the property hereunder in their own favor, without this constituting a conflict of interest, as well as to appear and renounce on behalf of the grantor for the recognition of the sole trust beneficiary, without this implying any acquisition or transfer' },
 };
