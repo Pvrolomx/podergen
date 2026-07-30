@@ -39,6 +39,7 @@ export default function StepFacultades({ data, updateData, onNext, onPrev }: Pro
         escrow: true,
         isr: true,
         sustitucionFiduciaria: true,
+        autocontrato: false,
       },
     });
   };

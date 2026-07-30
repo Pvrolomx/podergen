@@ -293,6 +293,7 @@ const INF_TO_SUBJ: Record<string, [string, string]> = {
   'Otorgar finiquito':              ['otorgue finiquito',     'otorguen finiquito'],
   'Firmar documentos':              ['firme documentos',      'firmen documentos'],
   'Suscribir':                      ['suscriba',              'suscriban'],
+  'Celebrar consigo mismo':         ['celebre consigo mismo', 'celebren consigo mismo'],
 };
 
 function toSubjuntivo(text: string, singular: boolean): string {
@@ -883,6 +884,11 @@ export async function generatePoderDocx(data: PoderData): Promise<Blob> {
   });
 
   const doc = new Document({
+    // Incrusta el borrador completo en docProps/custom.xml → podergen_data,
+    // de modo que el propio .docx pueda recargarse en el formulario (round-trip).
+    customProperties: [
+      { name: 'podergen_data', value: JSON.stringify(data) },
+    ],
     sections: [
       {
         properties: {

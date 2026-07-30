@@ -94,30 +94,51 @@ export default function Home() {
     URL.revokeObjectURL(url);
   }, [data, step]);
 
-  // ── Cargar borrador ← JSON ───────────────────────────────────────
+  // ── Cargar borrador ← JSON o DOCX ────────────────────────────────
+  // Aplica un objeto parseado: envoltura { data, step } o PoderData legacy.
+  const applyParsed = useCallback((parsed: any) => {
+    if (parsed && parsed.data) {
+      setData(mergeDefaults(parsed.data));
+      if (typeof parsed.step === 'number') setStep(parsed.step);
+    } else {
+      setData(mergeDefaults(parsed)); // legacy / JSON incrustado en el .docx
+    }
+    setIsDemo(false);
+  }, []);
+
   const importDraft = useCallback(() => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.json,.docx';
     input.onchange = async (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
+      const isDocx = (file.name || '').toLowerCase().endsWith('.docx');
       try {
-        const text = await file.text();
-        const parsed = JSON.parse(text);
-        if (parsed.data) {
-          setData(mergeDefaults(parsed.data));
-          if (typeof parsed.step === 'number') setStep(parsed.step);
-          setIsDemo(false);
+        if (isDocx) {
+          // DOCX: extraer el JSON incrustado en docProps/custom.xml (podergen_data).
+          const JSZip = (await import('jszip')).default;
+          const zip = await JSZip.loadAsync(await file.arrayBuffer());
+          const cx = zip.file('docProps/custom.xml');
+          if (!cx) throw new Error('no-custom-props');
+          const xml = await cx.async('string');
+          const m = xml.match(/name="podergen_data"[^>]*>\s*<vt:lpwstr>([\s\S]*?)<\/vt:lpwstr>/);
+          if (!m) throw new Error('no-podergen-data');
+          // Desescape XML (&amp; al final para no doble-decodificar), luego JSON.parse.
+          const raw = m[1]
+            .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+            .replace(/&amp;/g, '&');
+          applyParsed(JSON.parse(raw));
         } else {
-          setData(mergeDefaults(parsed)); // legacy
+          applyParsed(JSON.parse(await file.text()));
         }
       } catch {
-        alert('Error al cargar el archivo. Verifica que sea un borrador válido de PoderGen (.json).');
+        alert('Error al cargar el archivo. Verifica que sea un borrador válido de PoderGen (.json) o un DOCX generado por PoderGen (.docx).');
       }
     };
     input.click();
-  }, []);
+  }, [applyParsed]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -171,7 +192,7 @@ export default function Home() {
                 gap: '5px',
                 whiteSpace: 'nowrap',
               }}
-              title="Cargar borrador guardado (.json)"
+              title="Cargar borrador guardado (.json) o un DOCX generado por PoderGen (.docx)"
             >
               ↑ Cargar
             </button>
